@@ -1,0 +1,120 @@
+﻿<div class="min-h-screen">
+  <div class="px-6 py-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+      <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="space-y-2">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-500">JSON Schema Manager</p>
+          <h1 class="text-3xl md:text-4xl font-semibold font-display text-slate-900">
+            Render JSON Schema to Angular Reactive Forms
+          </h1>
+          <p class="text-sm text-slate-500 max-w-2xl">
+            Switch between demo schemas or paste your own. The renderer supports legacy drafts and modern schemas.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            Tailwind v3/v4 ready
+          </span>
+          <span class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
+            Angular 20
+          </span>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[360px,1fr] gap-6">
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <div class="space-y-1">
+            <h2 class="text-sm font-semibold text-slate-800">Schema selector</h2>
+            <p class="text-xs text-slate-500">Choose a ready-made schema or use custom JSON.</p>
+          </div>
+
+          <select
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+            [(ngModel)]="selectedId"
+            (change)="onSelect()"
+          >
+            <option *ngFor="let demo of demoSchemas" [value]="demo.id">{{ demo.name }}</option>
+          </select>
+
+          <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-500">
+            {{ selectedSchema.description }}
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-600">Schema JSON</label>
+            <textarea
+              class="h-56 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-slate-900"
+              [(ngModel)]="schemaInput"
+            ></textarea>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-600">Initial data JSON</label>
+            <textarea
+              class="h-40 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-slate-900"
+              [(ngModel)]="dataInput"
+            ></textarea>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <button
+              class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              type="button"
+              (click)="applyCustom()"
+            >
+              Apply custom schema
+            </button>
+            <button
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              type="button"
+              (click)="resetToDemo()"
+            >
+              Reset to demo
+            </button>
+          </div>
+
+          <div *ngIf="parseError" class="text-xs text-rose-600">{{ parseError }}</div>
+        </section>
+
+        <section class="space-y-6">
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <jsm-json-schema-form
+              [schema]="activeSchema"
+              [value]="activeData"
+              (valueChange)="activeData = $event"
+              (formReady)="onFormReady($event)"
+            ></jsm-json-schema-form>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+              <h3 class="text-sm font-semibold text-slate-800">Form status</h3>
+              <div class="flex items-center gap-3">
+                <span
+                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                  [ngClass]="form?.valid ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'"
+                >
+                  {{ form?.valid ? 'Valid' : 'Invalid' }}
+                </span>
+                <span class="text-xs text-slate-500">
+                  {{ form?.dirty ? 'Dirty' : 'Pristine' }} • {{ form?.touched ? 'Touched' : 'Untouched' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-400">
+                Schema draft auto-detected, $ref resolved, and validation driven by Ajv.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+              <h3 class="text-sm font-semibold text-slate-800">Live form value</h3>
+              <div class="text-xs font-mono whitespace-pre-wrap text-slate-600">
+                {{ activeData | json }}
+              </div>
+              <p class="text-xs text-slate-400">
+                Tip: wire to the formReady output to access the FormGroup instance.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>

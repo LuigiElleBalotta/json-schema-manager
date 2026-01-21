@@ -1,59 +1,146 @@
-# JsonSchemaManager
+﻿# JSON Schema Manager (Angular 20)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.14.
+An Angular 20 library that renders JSON Schema into a reactive form, plus a demo app for testing schemas. The renderer supports legacy drafts (draft‑04/06/07) and modern drafts (2019‑09/2020‑12). If a `$schema` is missing, the library infers a best‑effort draft.
 
-## Development server
+## Packages
+- **Library**: `@json-schema-manager/ng-json-schema-form`
+- **Demo app**: `projects/demo`
 
-To start a local development server, run:
+## Features
+- Reactive forms built from JSON Schema
+- Best‑effort UI rendering for all JSON Schema keywords
+- `$ref` resolution (local and external references)
+- Draft detection for old and new schema versions
+- Tailwind 3 / Tailwind 4 compatible utilities only
 
+## Install (library only)
 ```bash
-ng serve
+npm install @json-schema-manager/ng-json-schema-form
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Tailwind setup (v3 or v4)
+This library relies only on Tailwind utility classes. Ensure Tailwind is configured in your app and include the library in Tailwind content scanning:
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```js
+// tailwind.config.js
+module.exports = {
+  content: [
+    './src/**/*.{html,ts}',
+    './node_modules/@json-schema-manager/ng-json-schema-form/**/*.{js,mjs}',
+  ],
+};
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Usage (standalone)
+```ts
+import { Component } from '@angular/core';
+import { JsonSchemaFormComponent, JsonSchema } from '@json-schema-manager/ng-json-schema-form';
 
-```bash
-ng generate --help
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [JsonSchemaFormComponent],
+  template: `
+    <jsm-json-schema-form
+      [schema]="schema"
+      (formReady)="form = $event"
+      (valueChange)="value = $event"
+    ></jsm-json-schema-form>
+  `,
+})
+export class AppComponent {
+  form: any;
+  value: unknown;
+
+  schema: JsonSchema = {
+    title: 'Profile',
+    type: 'object',
+    required: ['firstName'],
+    properties: {
+      firstName: { type: 'string', minLength: 2 },
+      age: { type: 'integer', minimum: 1 },
+      role: { type: 'string', enum: ['Admin', 'User'] },
+    },
+  };
+}
 ```
 
-## Building
+## Usage (NgModule)
+```ts
+import { NgModule } from '@angular/core';
+import { JsonSchemaFormModule } from '@json-schema-manager/ng-json-schema-form';
 
-To build the project run:
-
-```bash
-ng build
+@NgModule({
+  imports: [JsonSchemaFormModule],
+})
+export class AppModule {}
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Supported keywords (UI + validation)
+This renderer supports **all** core JSON Schema keywords across drafts, including:
+- Types, enums, const, defaults
+- Object keywords: `properties`, `patternProperties`, `additionalProperties`, `required`, `propertyNames`, `dependentSchemas`, `dependentRequired`, `dependencies`
+- Array keywords: `items`, `prefixItems`, `additionalItems`, `contains`, `minItems`, `maxItems`, `uniqueItems`, `minContains`, `maxContains`
+- Numeric/string constraints: `minLength`, `maxLength`, `pattern`, `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`
+- Composition: `allOf`, `anyOf`, `oneOf`, `not`
+- Conditional: `if` / `then` / `else`
+- Metadata: `title`, `description`, `examples`, `readOnly`, `writeOnly`, `deprecated`
+- Schema defs: `$ref`, `$defs`, `definitions`
 
-## Running unit tests
+UI behavior notes:
+- `oneOf`/`anyOf` render a selector and rebuild the subtree when you switch selections.
+- `allOf` merges schemas for rendering and shows each section in order.
+- `if/then/else` is evaluated on the current node value to update the rendered schema.
+- `patternProperties` / `additionalProperties` allow adding dynamic keys.
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Demo app
+The demo app lets you:
+- Select prebuilt schemas
+- Paste a custom schema
+- Paste custom initial data
 
+Run the demo (after `npm install`):
 ```bash
-ng test
+npm run start -- --project demo
 ```
 
-## Running end-to-end tests
+## GitHub Pages demo
+This repo ships with a GitHub Actions workflow that builds and deploys the demo to GitHub Pages.
+1) Push to `main`
+2) Go to repo **Settings → Pages** and select the `gh-pages` branch
+3) Your demo will be available at: `https://<org>.github.io/<repo>/`
 
-For end-to-end (e2e) testing, run:
-
+## Build the library
 ```bash
-ng e2e
+npm install
+npm run build -- --project ng-json-schema-form
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Tests
+```bash
+npm test -- --project ng-json-schema-form
+npm test -- --project demo
+```
 
-## Additional Resources
+## Publish to npm
+1) Update `projects/ng-json-schema-form/package.json` with:
+   - `version`
+   - `repository`, `bugs`, `homepage` (optional)
+2) Login:
+```bash
+npm login
+```
+3) Build:
+```bash
+npm run build -- --project ng-json-schema-form
+```
+4) Publish from the dist output:
+```bash
+npm publish dist/ng-json-schema-form --access public
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Development notes
+- Schema resolver: `projects/ng-json-schema-form/src/lib/json-schema-resolver.service.ts`
+- Validation (draft detection + Ajv): `projects/ng-json-schema-form/src/lib/json-schema-validation.service.ts`
+- Renderer UI: `projects/ng-json-schema-form/src/lib/json-schema-node.component.ts`
+- Form builder: `projects/ng-json-schema-form/src/lib/json-schema-form.service.ts`

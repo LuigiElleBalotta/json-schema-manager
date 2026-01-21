@@ -1,0 +1,18 @@
+﻿{
+    "name":  "@json-schema-manager/ng-json-schema-form",
+    "version":  "0.1.0",
+    "peerDependencies":  {
+                             "@angular/common":  "^20.0.0",
+                             "rxjs":  "^7.8.0",
+                             "@angular/core":  "^20.0.0",
+                             "@angular/forms":  "^20.0.0"
+                         },
+    "dependencies":  {
+                         "ajv":  "^8.17.1",
+                         "ajv-draft-04":  "^1.0.0",
+                         "@apidevtools/json-schema-ref-parser":  "^11.0.0",
+                         "tslib":  "^2.6.2",
+                         "ajv-formats":  "^3.0.1"
+                     },
+    "sideEffects":  false
+}
