@@ -42,4 +42,4 @@ jobs:
             release/ng-json-schema-form-${{ steps.tag.outputs.version }}.tgz
             release/demo-${{ steps.tag.outputs.version }}.tgz
       - name: Publish to npm (OIDC trusted publishing)
-        run: npm publish dist/ng-json-schema-form --access public --provenance
+        run: npm publish ./dist/ng-json-schema-form --access public --provenance
