@@ -54,7 +54,7 @@ export class JsonSchemaFormService {
       const tupleLength = Math.max(prefixItems.length, minItems, initialItems.length);
 
       for (let i = 0; i < tupleLength; i += 1) {
-        const itemSchema = prefixItems[i] ?? effectiveSchema.items;
+        const itemSchema = (prefixItems[i] ?? effectiveSchema.items) as JsonSchema | boolean | undefined;
         if (itemSchema === false) {
           continue;
         }
@@ -150,12 +150,15 @@ export class JsonSchemaFormService {
       return {};
     }
 
-    if (schema.additionalProperties && schema.additionalProperties !== false) {
+    if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
       return schema.additionalProperties;
     }
 
-    if (schema.unevaluatedProperties && schema.unevaluatedProperties !== false) {
-      return schema.unevaluatedProperties === true ? {} : schema.unevaluatedProperties;
+    if (schema.unevaluatedProperties && typeof schema.unevaluatedProperties === 'object') {
+      return schema.unevaluatedProperties;
+    }
+    if (schema.unevaluatedProperties === true) {
+      return {};
     }
 
     return undefined;

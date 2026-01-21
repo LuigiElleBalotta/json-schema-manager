@@ -1,4 +1,5 @@
-﻿import { Component } from '@angular/core';
+﻿import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
 import { FormGroup, FormsModule } from '@angular/forms';
 import { JsonSchema, JsonSchemaFormComponent } from '@json-schema-manager/ng-json-schema-form';
 import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
@@ -6,7 +7,7 @@ import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FormsModule, JsonSchemaFormComponent],
+  imports: [CommonModule, FormsModule, JsonSchemaFormComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -59,4 +60,5 @@ export class App {
     this.form = form;
   }
 }
+
 

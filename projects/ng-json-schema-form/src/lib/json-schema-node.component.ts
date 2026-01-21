@@ -7,7 +7,7 @@
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, FormArray, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { JsonSchema, JsonSchemaType } from './types';
 import { JsonSchemaFormService } from './json-schema-form.service';
 import { JsonSchemaValidationService } from './json-schema-validation.service';
@@ -140,7 +140,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
               </div>
               <jsm-schema-node
                 [schema]="schemaForKey(key)"
-                [control]="controlAsGroup.get(key)"
+                [control]="childControl(key)"
                 [parent]="controlAsGroup"
                 [controlKey]="key"
                 [path]="pathForChild(key)"
@@ -269,7 +269,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
             [attr.type]="inputType"
             [attr.placeholder]="schema.title || label"
-            [formControl]="control"
+            [formControl]="controlAsFormControl"
           />
 
           <textarea
@@ -277,19 +277,19 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
             rows="4"
             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
             [attr.placeholder]="schema.title || label"
-            [formControl]="control"
+            [formControl]="controlAsFormControl"
           ></textarea>
 
           <select
             *ngSwitchCase="'select'"
             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-            [formControl]="control"
+            [formControl]="controlAsFormControl"
           >
             <option *ngFor="let option of effectiveSchema.enum" [ngValue]="option">{{ option }}</option>
           </select>
 
           <label *ngSwitchCase="'checkbox'" class="inline-flex items-center gap-2 text-sm text-slate-700">
-            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900" [formControl]="control" />
+            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900" [formControl]="controlAsFormControl" />
             <span>
               {{ schema.title || label }}
               <span *ngIf="required" class="text-rose-500">*</span>
@@ -302,7 +302,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
         </p>
 
         <div *ngIf="effectiveSchema.examples?.length" class="text-xs text-slate-400">
-          Example: {{ effectiveSchema.examples[0] }}
+          Example: {{ effectiveSchema.examples?.[0] }}
         </div>
 
         <div *ngIf="effectiveSchema.contentMediaType" class="text-xs text-slate-400">
@@ -410,6 +410,10 @@ export class JsonSchemaNodeComponent implements OnInit {
 
   get controlAsGroup(): FormGroup {
     return this.control as FormGroup;
+  }
+
+  get controlAsFormControl(): FormControl {
+    return this.control as FormControl;
   }
 
   get controlAsArray(): FormArray {
@@ -605,7 +609,11 @@ export class JsonSchemaNodeComponent implements OnInit {
     this.controlReplaced.emit(control);
   }
 
-  private get effectiveSchema(): JsonSchema {
+  childControl(key: string): AbstractControl {
+    return this.controlAsGroup.get(key) as AbstractControl;
+  }
+
+  get effectiveSchema(): JsonSchema {
     let schema = this.schema;
 
     if (schema.allOf?.length) {

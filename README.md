@@ -31,6 +31,17 @@ module.exports = {
 };
 ```
 
+For Tailwind v4 + PostCSS, Angular expects a JSON PostCSS config:
+```json
+// postcss.config.json
+{
+  "plugins": {
+    "@tailwindcss/postcss": {},
+    "autoprefixer": {}
+  }
+}
+```
+
 ## Usage (standalone)
 ```ts
 import { Component } from '@angular/core';

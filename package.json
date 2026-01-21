@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "json-schema-manager",
     "version":  "0.0.0",
     "scripts":  {
@@ -51,6 +51,7 @@
                             "karma-jasmine":  "~5.1.0",
                             "jasmine-core":  "~5.9.0",
                             "@types/jasmine":  "~5.1.0",
-                            "@angular/build":  "^20.3.14"
+                            "@angular/build":  "^20.3.14",
+                            "@tailwindcss/postcss":  "^4.0.0"
                         }
 }

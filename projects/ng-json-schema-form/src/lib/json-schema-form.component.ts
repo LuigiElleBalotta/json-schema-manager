@@ -26,7 +26,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
       <div class="space-y-1">
         <h2 class="text-xl font-semibold text-slate-900">{{ resolvedSchema?.title || 'Generated Form' }}</h2>
         <p *ngIf="resolvedSchema?.description" class="text-sm text-slate-500">
-          {{ resolvedSchema.description }}
+          {{ resolvedSchema?.description }}
         </p>
       </div>
 

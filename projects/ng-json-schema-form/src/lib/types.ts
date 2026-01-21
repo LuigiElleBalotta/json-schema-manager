@@ -51,8 +51,7 @@ export interface JsonSchemaBase {
   required?: string[];
 }
 
-export interface JsonSchemaObject extends JsonSchemaBase {
-  type?: 'object' | JsonSchemaType[];
+export interface JsonSchemaObject {
   properties?: Record<string, JsonSchema>;
   patternProperties?: Record<string, JsonSchema>;
   additionalProperties?: boolean | JsonSchema;
@@ -65,8 +64,7 @@ export interface JsonSchemaObject extends JsonSchemaBase {
   maxProperties?: number;
 }
 
-export interface JsonSchemaArray extends JsonSchemaBase {
-  type?: 'array' | JsonSchemaType[];
+export interface JsonSchemaArray {
   items?: JsonSchema | boolean;
   prefixItems?: JsonSchema[];
   additionalItems?: JsonSchema | boolean;
@@ -84,10 +82,10 @@ export interface JsonSchemaCombinators extends JsonSchemaBase {
   else?: JsonSchema;
 }
 
-export type JsonSchema = JsonSchemaBase & JsonSchemaObject & JsonSchemaArray & JsonSchemaCombinators & {
+export interface JsonSchema extends JsonSchemaBase, JsonSchemaObject, JsonSchemaArray, JsonSchemaCombinators {
   $defs?: Record<string, JsonSchema>;
   definitions?: Record<string, JsonSchema>;
-};
+}
 
 export interface SchemaFieldContext {
   schema: JsonSchema;

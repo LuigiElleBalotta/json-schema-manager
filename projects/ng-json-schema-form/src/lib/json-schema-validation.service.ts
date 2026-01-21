@@ -80,7 +80,6 @@ export class JsonSchemaValidationService {
           strict: false,
           allErrors: true,
           allowUnionTypes: true,
-          schemaId: 'auto',
         });
         break;
       case 'draft2020':
