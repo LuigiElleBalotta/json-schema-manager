@@ -54,7 +54,9 @@ import { JsonSchemaFormComponent, JsonSchema } from '@json-schema-manager/ng-jso
   template: `
     <jsm-json-schema-form
       [schema]="schema"
+      [data]="initialData"
       (formReady)="form = $event"
+      (schemaReady)="onSchemaReady($event)"
       (valueChange)="value = $event"
     ></jsm-json-schema-form>
   `,
@@ -62,6 +64,8 @@ import { JsonSchemaFormComponent, JsonSchema } from '@json-schema-manager/ng-jso
 export class AppComponent {
   form: any;
   value: unknown;
+  resolvedSchema?: JsonSchema;
+  initialData = { firstName: 'Sara', age: 31 };
 
   schema: JsonSchema = {
     title: 'Profile',
@@ -73,6 +77,9 @@ export class AppComponent {
       role: { type: 'string', enum: ['Admin', 'User'] },
     },
   };
+  onSchemaReady(schema: JsonSchema) {
+    this.resolvedSchema = schema;
+  }
 }
 ```
 
@@ -97,6 +104,14 @@ This renderer supports **all** core JSON Schema keywords across drafts, includin
 - Conditional: `if` / `then` / `else`
 - Metadata: `title`, `description`, `examples`, `readOnly`, `writeOnly`, `deprecated`
 - Schema defs: `$ref`, `$defs`, `definitions`
+
+External `$ref` notes:
+- External refs are fetched in the browser using `fetch()`.
+- The remote server must allow CORS for the demo/app origin.
+- Use `$id` on the root schema to establish the base URL for relative refs.
+
+## Loading state hook
+The form emits `schemaReady` once all local/external `$ref` are resolved and the UI can be rendered. Use it to show loaders.
 
 UI behavior notes:
 - `oneOf`/`anyOf` render a selector and rebuild the subtree when you switch selections.

@@ -113,7 +113,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
         </div>
       </div>
 
-      <fieldset *ngSwitchCase="'object'" class="border border-slate-200 rounded-xl p-4 bg-white/70">
+      <fieldset *ngSwitchCase="'object'" class="group border border-slate-200 rounded-2xl p-4 bg-white/70 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
         <legend class="px-2 text-sm font-semibold text-slate-700">{{ schema.title || label }}</legend>
         <p *ngIf="schema.description" class="text-xs text-slate-500 mb-4">{{ schema.description }}</p>
         <div *ngIf="metaBadges.length" class="flex flex-wrap gap-2 mb-4">
@@ -132,7 +132,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
                 <span class="text-xs font-semibold text-slate-500">{{ key }}</span>
                 <button
                   type="button"
-                  class="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                  class="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
                   (click)="removeDynamicKey(key)"
                 >
                   Remove
@@ -157,13 +157,13 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
           <div class="text-xs font-semibold text-slate-500">Add property</div>
           <div class="flex flex-col md:flex-row gap-2">
             <input
-              class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+              class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 hover:border-slate-400"
               [(ngModel)]="newPropertyKey"
               placeholder="propertyName"
             />
             <button
               type="button"
-              class="px-3 py-2 rounded-lg text-sm font-medium bg-slate-900 text-white hover:bg-slate-800"
+              class="px-3 py-2 rounded-lg text-sm font-medium bg-slate-900 text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md"
               (click)="addDynamicProperty()"
             >
               Add
@@ -185,7 +185,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
           </div>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-900 text-white hover:bg-slate-800"
+            class="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-900 text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             (click)="addArrayItem()"
             [disabled]="!canAddArrayItem"
           >
@@ -211,13 +211,13 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
         <div class="space-y-3" *ngIf="arrayControls.length > 0; else emptyArray">
           <div
             *ngFor="let item of arrayControls; let i = index"
-            class="rounded-xl border border-slate-200 p-3 bg-white"
+            class="rounded-2xl border border-slate-200 p-3 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-semibold text-slate-500">Item {{ i + 1 }}</span>
               <button
                 type="button"
-                class="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                class="text-xs font-semibold text-rose-600 transition hover:text-rose-700"
                 (click)="removeArrayItem(i)"
               >
                 Remove
@@ -266,7 +266,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
         <ng-container [ngSwitch]="inputKind">
           <input
             *ngSwitchCase="'text'"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 hover:border-slate-400"
             [attr.type]="inputType"
             [attr.placeholder]="schema.title || label"
             [formControl]="controlAsFormControl"
@@ -275,21 +275,21 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
           <textarea
             *ngSwitchCase="'textarea'"
             rows="4"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 hover:border-slate-400"
             [attr.placeholder]="schema.title || label"
             [formControl]="controlAsFormControl"
           ></textarea>
 
           <select
             *ngSwitchCase="'select'"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 hover:border-slate-400"
             [formControl]="controlAsFormControl"
           >
             <option *ngFor="let option of effectiveSchema.enum" [ngValue]="option">{{ option }}</option>
           </select>
 
           <label *ngSwitchCase="'checkbox'" class="inline-flex items-center gap-2 text-sm text-slate-700">
-            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900" [formControl]="controlAsFormControl" />
+            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-slate-900 transition" [formControl]="controlAsFormControl" />
             <span>
               {{ schema.title || label }}
               <span *ngIf="required" class="text-rose-500">*</span>

@@ -24,6 +24,7 @@ export class App {
   form?: FormGroup;
 
   parseError = '';
+  loading = true;
 
   get selectedSchema(): DemoSchema {
     return this.demoSchemas.find((schema) => schema.id === this.selectedId) ?? this.demoSchemas[0];
@@ -31,6 +32,7 @@ export class App {
 
   onSelect(): void {
     this.useCustom = false;
+    this.loading = true;
     this.activeSchema = this.selectedSchema.schema;
     this.activeData = this.selectedSchema.data;
     this.schemaInput = JSON.stringify(this.activeSchema, null, 2);
@@ -40,6 +42,7 @@ export class App {
 
   applyCustom(): void {
     this.parseError = '';
+    this.loading = true;
     try {
       const parsedSchema = JSON.parse(this.schemaInput) as JsonSchema;
       const parsedData = this.dataInput ? JSON.parse(this.dataInput) : undefined;
@@ -53,11 +56,16 @@ export class App {
 
   resetToDemo(): void {
     this.useCustom = false;
+    this.loading = true;
     this.onSelect();
   }
 
   onFormReady(form: FormGroup): void {
     this.form = form;
+  }
+
+  onSchemaReady(): void {
+    this.loading = false;
   }
 }
 

@@ -49,9 +49,11 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
 export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   @Input({ required: true }) schema!: JsonSchema;
   @Input() value?: unknown;
+  @Input() data?: unknown;
 
   @Output() formReady = new EventEmitter<FormGroup>();
   @Output() valueChange = new EventEmitter<unknown>();
+  @Output() schemaReady = new EventEmitter<JsonSchema>();
 
   form!: FormGroup;
   rootControl!: AbstractControl;
@@ -68,7 +70,7 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['schema'] || changes['value']) {
+    if (changes['schema'] || changes['value'] || changes['data']) {
       void this.buildForm();
     }
   }
@@ -80,8 +82,10 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   private async buildForm(): Promise<void> {
     this.valueSub?.unsubscribe();
     this.loading = true;
-    this.resolvedSchema = await this.resolver.resolve(this.schema);
-    this.rootControl = this.schemaService.buildControl(this.resolvedSchema, this.value);
+    this.resolvedSchema = await this.resolver.resolve(this.schema, this.schema?.$id);
+    this.schemaReady.emit(this.resolvedSchema);
+    const initialData = this.value !== undefined ? this.value : this.data;
+    this.rootControl = this.schemaService.buildControl(this.resolvedSchema, initialData);
     this.form = this.rootControl instanceof FormGroup ? this.rootControl : new FormGroup({ value: this.rootControl });
     this.formReady.emit(this.form);
     this.loading = false;
