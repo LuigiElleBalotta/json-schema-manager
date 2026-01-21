@@ -158,25 +158,29 @@ npm test -- --project demo
 1) Update `projects/ng-json-schema-form/package.json` with:
    - `version`
    - `repository`, `bugs`, `homepage` (optional)
-2) For auto-publish on release merges, add `NPM_TOKEN` in repo Secrets.
-2) Login:
+2) Login (local/manual):
 ```bash
 npm login
 ```
 3) Build:
 ```bash
-npm run build -- --project ng-json-schema-form
+npm run build:lib
 ```
 4) Publish from the dist output:
 ```bash
-npm publish dist/ng-json-schema-form --access public
+npm publish ./dist/ng-json-schema-form --access public
 ```
 
 ## Release workflow
 Tag a version in the format `x.y.z` to trigger:
 - GitHub Release creation
 - Attached artifacts (library + demo)
-- Optional npm publish if `NPM_TOKEN` is present
+- npm publish via **OIDC trusted publishing**
+
+### OIDC trusted publishing setup (npm)
+1) On npm, open the package settings for `@elle96/ng-json-schema-manager`.
+2) Enable **Trusted Publishing** and add GitHub as a provider.
+3) Select the repository and workflow that will publish (this `release.yml`).
 
 ## Development notes
 - Schema resolver: `projects/ng-json-schema-form/src/lib/json-schema-resolver.service.ts`
