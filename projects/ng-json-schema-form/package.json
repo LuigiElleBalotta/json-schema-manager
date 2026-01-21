@@ -1,6 +1,6 @@
 ﻿{
     "name": "@elle96/ng-json-schema-manager",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "peerDependencies": {
         "@angular/common": "^20.0.0",
         "rxjs": "^7.8.0",
