@@ -37,7 +37,7 @@ jobs:
           files: |
             release/ng-json-schema-form-${{ steps.tag.outputs.version }}.tgz
             release/demo-${{ steps.tag.outputs.version }}.tgz
-      - if: secrets.NPM_TOKEN != ''
+      - if: ${{ secrets.NPM_TOKEN != '' }}
         name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
