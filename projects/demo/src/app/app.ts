@@ -1,7 +1,7 @@
 ﻿import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormGroup, FormsModule } from '@angular/forms';
-import { JsonSchema, JsonSchemaFormComponent } from '@json-schema-manager/ng-json-schema-form';
+import { JsonSchema, JsonSchemaFormComponent } from '@elle96/ng-json-schema-manager';
 import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
 
 @Component({
@@ -68,5 +68,6 @@ export class App {
     this.loading = false;
   }
 }
+
 
 

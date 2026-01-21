@@ -1,3 +1,5 @@
-﻿# @json-schema-manager/ng-json-schema-form
+﻿# @elle96/ng-json-schema-manager
 
 This package is part of the JSON Schema Manager workspace. See the root README for usage, demo, and publishing instructions.
+
+

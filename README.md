@@ -1,9 +1,15 @@
 ﻿# JSON Schema Manager (Angular 20)
 
+![CI](https://github.com/LuigiElleBalotta/json-schema-manager/actions/workflows/ci.yml/badge.svg)
+![Deploy Demo](https://github.com/LuigiElleBalotta/json-schema-manager/actions/workflows/deploy-demo.yml/badge.svg)
+![Release](https://github.com/LuigiElleBalotta/json-schema-manager/actions/workflows/release.yml/badge.svg)
+![npm](https://img.shields.io/npm/v/@elle96/ng-json-schema-manager)
+
+
 An Angular 20 library that renders JSON Schema into a reactive form, plus a demo app for testing schemas. The renderer supports legacy drafts (draft‑04/06/07) and modern drafts (2019‑09/2020‑12). If a `$schema` is missing, the library infers a best‑effort draft.
 
 ## Packages
-- **Library**: `@json-schema-manager/ng-json-schema-form`
+- **Library**: `@elle96/ng-json-schema-manager`
 - **Demo app**: `projects/demo`
 
 ## Features
@@ -15,7 +21,7 @@ An Angular 20 library that renders JSON Schema into a reactive form, plus a demo
 
 ## Install (library only)
 ```bash
-npm install @json-schema-manager/ng-json-schema-form
+npm install @elle96/ng-json-schema-manager
 ```
 
 ## Tailwind setup (v3 or v4)
@@ -26,7 +32,7 @@ This library relies only on Tailwind utility classes. Ensure Tailwind is configu
 module.exports = {
   content: [
     './src/**/*.{html,ts}',
-    './node_modules/@json-schema-manager/ng-json-schema-form/**/*.{js,mjs}',
+    './node_modules/@elle96/ng-json-schema-manager/**/*.{js,mjs}',
   ],
 };
 ```
@@ -45,7 +51,7 @@ For Tailwind v4 + PostCSS, Angular expects a JSON PostCSS config:
 ## Usage (standalone)
 ```ts
 import { Component } from '@angular/core';
-import { JsonSchemaFormComponent, JsonSchema } from '@json-schema-manager/ng-json-schema-form';
+import { JsonSchemaFormComponent, JsonSchema } from '@elle96/ng-json-schema-manager';
 
 @Component({
   selector: 'app-root',
@@ -86,7 +92,7 @@ export class AppComponent {
 ## Usage (NgModule)
 ```ts
 import { NgModule } from '@angular/core';
-import { JsonSchemaFormModule } from '@json-schema-manager/ng-json-schema-form';
+import { JsonSchemaFormModule } from '@elle96/ng-json-schema-manager';
 
 @NgModule({
   imports: [JsonSchemaFormModule],
@@ -152,6 +158,7 @@ npm test -- --project demo
 1) Update `projects/ng-json-schema-form/package.json` with:
    - `version`
    - `repository`, `bugs`, `homepage` (optional)
+2) For auto-publish on release merges, add `NPM_TOKEN` in repo Secrets.
 2) Login:
 ```bash
 npm login
@@ -165,8 +172,17 @@ npm run build -- --project ng-json-schema-form
 npm publish dist/ng-json-schema-form --access public
 ```
 
+## Release workflow
+Tag a version in the format `x.y.z` to trigger:
+- GitHub Release creation
+- Attached artifacts (library + demo)
+- Optional npm publish if `NPM_TOKEN` is present
+
 ## Development notes
 - Schema resolver: `projects/ng-json-schema-form/src/lib/json-schema-resolver.service.ts`
 - Validation (draft detection + Ajv): `projects/ng-json-schema-form/src/lib/json-schema-validation.service.ts`
 - Renderer UI: `projects/ng-json-schema-form/src/lib/json-schema-node.component.ts`
 - Form builder: `projects/ng-json-schema-form/src/lib/json-schema-form.service.ts`
+
+
+

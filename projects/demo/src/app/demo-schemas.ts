@@ -1,4 +1,4 @@
-﻿import { JsonSchema } from '@json-schema-manager/ng-json-schema-form';
+﻿import { JsonSchema } from '@elle96/ng-json-schema-manager';
 
 export interface DemoSchema {
   id: string;
@@ -194,3 +194,4 @@ export const DEMO_SCHEMAS: DemoSchema[] = [
     },
   },
 ];
+
