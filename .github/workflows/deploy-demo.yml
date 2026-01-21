@@ -19,8 +19,15 @@ jobs:
       - run: npm ci
       - name: Build demo for GitHub Pages
         run: npm run build -- --project demo --configuration production --base-href "/${{ github.event.repository.name }}/"
+      - name: Resolve publish directory
+        run: |
+          if [ -d dist/demo/browser ]; then
+            echo "PUBLISH_DIR=dist/demo/browser" >> $GITHUB_ENV
+          else
+            echo "PUBLISH_DIR=dist/demo" >> $GITHUB_ENV
+          fi
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: dist/demo
+          publish_dir: ${{ env.PUBLISH_DIR }}
