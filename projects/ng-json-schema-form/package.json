@@ -1,6 +1,30 @@
 ﻿{
     "name": "@elle96/ng-json-schema-manager",
-    "version": "0.0.14",
+    "version": "0.0.15",
+    "description": "Angular JSON Schema form renderer with Tailwind styling, external $ref support, and reactive forms.",
+    "homepage": "https://luigiellebalotta.github.io/json-schema-manager/",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LuigiElleBalotta/json-schema-manager.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LuigiElleBalotta/json-schema-manager/issues"
+    },
+    "license": "MIT",
+    "author": "Luigi Elle Balotta",
+    "keywords": [
+        "angular",
+        "json-schema",
+        "forms",
+        "reactive-forms",
+        "schema",
+        "tailwind",
+        "ui",
+        "form-builder"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "peerDependencies": {
         "@angular/common": "^20.0.0",
         "rxjs": "^7.8.0",
