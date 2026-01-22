@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
@@ -27,19 +26,6 @@ jobs:
       - run: npm ci
       - run: npm run build -- --project ng-json-schema-form
       - run: npm run build -- --project demo --configuration production --base-href "/${{ github.event.repository.name }}/"
-      - name: Prepare npm for OIDC publish
-        run: |
-          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ]; then
-            rm -f "$NPM_CONFIG_USERCONFIG" || true
-            unset NPM_CONFIG_USERCONFIG
-          fi
-          rm -f .npmrc || true
-          rm -f ~/.npmrc || true
-          unset NODE_AUTH_TOKEN
-          unset NPM_TOKEN
-          npm config delete registry || true
-          npm config delete //registry.npmjs.org/:_authToken || true
-          npm config delete _authToken || true
       - name: Package release assets
         run: |
           mkdir -p release
@@ -54,8 +40,7 @@ jobs:
           files: |
             release/ng-json-schema-form-${{ steps.tag.outputs.version }}.tgz
             release/demo-${{ steps.tag.outputs.version }}.tgz
-      - name: Publish to npm (OIDC trusted publishing)
-        run: |
-          export NPM_CONFIG_PROVENANCE=true
-          export NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
-          env -u NODE_AUTH_TOKEN -u NPM_CONFIG_USERCONFIG -u NPM_TOKEN npm publish ./dist/ng-json-schema-form --access public --provenance --registry=https://registry.npmjs.org/
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./dist/ng-json-schema-form --access public
