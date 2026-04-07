@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
@@ -41,13 +40,7 @@ jobs:
           files: |
             release/ng-json-schema-form-${{ steps.tag.outputs.version }}.tgz
             release/demo-${{ steps.tag.outputs.version }}.tgz
-      - name: Publish to npm (OIDC trusted publishing)
+      - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ''
-        run: |
-          if npm view @elle96/ng-json-schema-manager >/dev/null 2>&1; then
-            npm publish ./dist/ng-json-schema-form --access public --provenance
-          else
-            echo "Package @elle96/ng-json-schema-manager not found on npm. Run Bootstrap Publish first."
-            exit 1
-          fi
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./dist/ng-json-schema-form --access public

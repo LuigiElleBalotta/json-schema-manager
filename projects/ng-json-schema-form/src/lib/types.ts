@@ -92,3 +92,9 @@ export interface SchemaFieldContext {
   path: string;
   required: boolean;
 }
+
+export interface SchemaError {
+  path: string;
+  message: string;
+  keyword: string;
+}
