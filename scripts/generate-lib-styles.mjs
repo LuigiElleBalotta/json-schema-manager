@@ -33,14 +33,9 @@ async function generate() {
     css
   );
 
-  // Write TypeScript file with CSS as a string constant
+  // Write TypeScript file with CSS as a named export
   const ts = `// AUTO-GENERATED — do not edit manually. Run: node scripts/generate-lib-styles.mjs
-import { JSM_STYLES } from './jsm-styles.token';
-
-export const JSM_STYLES_PROVIDER = {
-  provide: JSM_STYLES,
-  useValue: ${JSON.stringify(css)},
-};
+export const JSM_CSS: string = ${JSON.stringify(css)};
 `;
 
   writeFileSync(

@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { JSM_STYLES } from './jsm-styles.token';
+import { JSM_CSS } from './jsm-styles.generated';
 
 const STYLE_ID = 'jsm-tailwind-styles';
 
@@ -8,15 +8,8 @@ const STYLE_ID = 'jsm-tailwind-styles';
 export class JsonSchemaStylesService {
   private injected = false;
 
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: object,
-    @Inject(JSM_STYLES) private css: string,
-  ) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
-  /**
-   * Injects the bundled Tailwind CSS as an inline <style> tag once.
-   * Safe to call multiple times. No-op in SSR.
-   */
   inject(): void {
     if (this.injected || !isPlatformBrowser(this.platformId)) return;
     if (typeof document === 'undefined') return;
@@ -24,7 +17,7 @@ export class JsonSchemaStylesService {
 
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = this.css;
+    style.textContent = JSM_CSS;
     document.head.appendChild(style);
     this.injected = true;
   }
