@@ -5,6 +5,7 @@
   Input,
   Output,
   OnInit,
+  ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -16,6 +17,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
   selector: 'jsm-schema-node',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  encapsulation: ViewEncapsulation.None,
   template: `
     <ng-container [ngSwitch]="nodeKind">
 
@@ -130,11 +132,37 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
             [ngClass]="badgeClass(badge)">{{ badge }}</span>
         </div>
 
-        <!-- griglia 2 col: i figli semplici occupano 1 col, i complessi 2 col -->
+        <!-- campi semplici (string/number/bool/enum) → griglia 2 colonne -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" [formGroup]="controlAsGroup">
-          <ng-container *ngFor="let key of objectKeys">
-            <div class="flex flex-col gap-1"
-              [class.sm:col-span-2]="!isSimpleChild(key)">
+          <ng-container *ngFor="let key of simpleKeys">
+            <div class="flex flex-col gap-1">
+              <div *ngIf="isDynamicKey(key)"
+                class="flex items-center justify-between rounded-md border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 mb-1">
+                <span class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ key }}</span>
+                <button type="button"
+                  class="rounded px-1.5 py-0.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  (click)="removeDynamicKey(key)">Remove</button>
+              </div>
+              <jsm-schema-node
+                [schema]="schemaForKey(key)"
+                [control]="childControl(key)"
+                [parent]="controlAsGroup"
+                [controlKey]="key"
+                [path]="pathForChild(key)"
+                [errorsMap]="errorsMap"
+                [label]="key"
+                [required]="isRequired(key)"
+                [allowAdditionalProperties]="allowAdditionalProperties"
+                (controlReplaced)="controlReplaced.emit($event)">
+              </jsm-schema-node>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- campi complessi (object/array/combinator) → colonna piena -->
+        <div class="space-y-4 mt-4" *ngIf="complexKeys.length > 0" [formGroup]="controlAsGroup">
+          <ng-container *ngFor="let key of complexKeys">
+            <div class="flex flex-col gap-1">
               <div *ngIf="isDynamicKey(key)"
                 class="flex items-center justify-between rounded-md border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 mb-1">
                 <span class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ key }}</span>
@@ -449,6 +477,14 @@ export class JsonSchemaNodeComponent implements OnInit {
   get controlAsArray(): FormArray { return this.control as FormArray; }
   get arrayControls(): AbstractControl[] { return this.controlAsArray.controls; }
   get objectKeys(): string[] { return Object.keys(this.controlAsGroup.controls); }
+
+  get simpleKeys(): string[] {
+    return this.objectKeys.filter(k => this.isSimpleChild(k));
+  }
+
+  get complexKeys(): string[] {
+    return this.objectKeys.filter(k => !this.isSimpleChild(k));
+  }
 
   get canAddProperty(): boolean {
     if (!this.allowAdditionalProperties) return false;
