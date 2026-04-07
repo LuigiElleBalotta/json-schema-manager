@@ -4,7 +4,7 @@ import Ajv2019 from 'ajv/dist/2019';
 import Ajv2020 from 'ajv/dist/2020';
 import addFormats from 'ajv-formats';
 import AjvDraft04 from 'ajv-draft-04';
-import { JsonSchema } from './types';
+import { JsonSchema, SchemaError } from './types';
 
 export type JsonSchemaDraft = 'draft4' | 'draft6' | 'draft7' | 'draft2019' | 'draft2020';
 
@@ -23,6 +23,39 @@ export class JsonSchemaValidationService {
       return [];
     }
     return validate.errors ?? [];
+  }
+
+  /**
+   * Validates the schema itself against its JSON Schema meta-schema.
+   * Returns a list of SchemaError describing what is wrong in the schema definition.
+   */
+  validateSchema(schema: JsonSchema): SchemaError[] {
+    const draft = this.detectDraft(schema);
+    const ajv = this.getAjv(draft);
+
+    try {
+      const valid = ajv.validateSchema(schema as object);
+      if (valid) return [];
+      return (ajv.errors ?? []).map((e) => ({
+        path: e.instancePath || '/',
+        message: e.message ?? e.keyword,
+        keyword: e.keyword,
+      }));
+    } catch (e) {
+      // ajv.validateSchema throws when the schema is so broken it cannot be compiled.
+      // The error message contains comma-separated individual violations — split them.
+      const raw = e instanceof Error ? e.message : String(e);
+      // Strip the "schema is invalid: " prefix if present
+      const body = raw.replace(/^schema is invalid:\s*/i, '');
+      // Each violation looks like "data/some/path must ..." — extract path and message
+      return body.split(', ').map((msg) => {
+        const trimmed = msg.trim();
+        const match = trimmed.match(/^(data[^\s]*)\s+(.+)$/);
+        return match
+          ? { path: match[1].replace(/^data/, '') || '/', message: match[2], keyword: 'schema' }
+          : { path: '/', message: trimmed, keyword: 'schema' };
+      });
+    }
   }
 
   detectDraft(schema: JsonSchema): JsonSchemaDraft {

@@ -15,6 +15,13 @@ export class App {
   demoSchemas = DEMO_SCHEMAS;
   selectedId = this.demoSchemas[0].id;
   useCustom = false;
+  darkMode = false;
+  allowAdditionalProperties = false;
+
+  toggleDark(): void {
+    this.darkMode = !this.darkMode;
+    document.documentElement.classList.toggle('dark', this.darkMode);
+  }
 
   schemaInput = JSON.stringify(this.demoSchemas[0].schema, null, 2);
   dataInput = JSON.stringify(this.demoSchemas[0].data, null, 2);
