@@ -18,6 +18,24 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   encapsulation: ViewEncapsulation.None,
+  styles: [`
+    .jsm-toggle-track {
+      position: relative; display: inline-flex; align-items: center;
+      width: 2.25rem; height: 1.25rem; border-radius: 9999px;
+      flex-shrink: 0; transition: background-color 0.2s;
+      background-color: #cbd5e1;
+    }
+    .jsm-toggle-track.jsm-toggle-on { background-color: #4f46e5; }
+    .dark .jsm-toggle-track:not(.jsm-toggle-on) { background-color: #475569; }
+    .jsm-toggle-thumb {
+      display: inline-block; width: 1rem; height: 1rem;
+      border-radius: 9999px; background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transform: translateX(0.125rem);
+      transition: transform 0.2s;
+    }
+    .jsm-toggle-track.jsm-toggle-on .jsm-toggle-thumb { transform: translateX(1.125rem); }
+  `],
   template: `
     <ng-container [ngSwitch]="nodeKind">
 
@@ -349,14 +367,9 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
 
           <!-- checkbox come toggle switch -->
           <label *ngSwitchCase="'checkbox'" class="inline-flex cursor-pointer items-center gap-2.5">
-            <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors"
-              [class.bg-indigo-600]="controlAsFormControl.value"
-              [class.bg-slate-300]="!controlAsFormControl.value"
-              [class.dark:bg-slate-600]="!controlAsFormControl.value">
+            <span class="jsm-toggle-track" [class.jsm-toggle-on]="controlAsFormControl.value">
               <input type="checkbox" class="sr-only" [formControl]="controlAsFormControl" />
-              <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
-                [class.translate-x-4]="controlAsFormControl.value"
-                [class.translate-x-0.5]="!controlAsFormControl.value"></span>
+              <span class="jsm-toggle-thumb"></span>
             </span>
             <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
               {{ schema.title || label }}<span *ngIf="required" class="ml-0.5 text-red-500">*</span>
