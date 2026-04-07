@@ -7,6 +7,7 @@
   OnDestroy,
   Output,
   SimpleChanges,
+  ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +22,26 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
   selector: 'jsm-json-schema-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, JsonSchemaNodeComponent],
+  encapsulation: ViewEncapsulation.None,
+  styles: [`
+    .jsm-root *, .jsm-root *::before, .jsm-root *::after { box-sizing: border-box; }
+    .jsm-root input, .jsm-root textarea, .jsm-root select, .jsm-root button {
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+    }
+    .jsm-root input[type="number"]::-webkit-inner-spin-button,
+    .jsm-root input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+    /* Force border visibility against host resets */
+    .jsm-root input:not([type="checkbox"]):not([type="radio"]):not(.sr-only),
+    .jsm-root textarea,
+    .jsm-root select {
+      border-width: 1.5px !important;
+      border-style: solid !important;
+    }
+  `],
   template: `
+    <div class="jsm-root">
     <form class="w-full space-y-5">
       <div *ngIf="resolvedSchema?.title || resolvedSchema?.description" class="space-y-0.5">
         <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{{ resolvedSchema?.title || 'Form' }}</h2>
@@ -74,6 +94,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
         ></jsm-schema-node>
       </div>
     </form>
+    </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
