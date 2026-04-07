@@ -16,6 +16,11 @@ const root = resolve(__dirname, '..');
 
 const inputCss = `
 @import "tailwindcss";
+
+/* Force class-based dark mode — never use prefers-color-scheme media query.
+   The host app controls dark mode by adding/removing the 'dark' class on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source "../ng-json-schema-form/src/lib/json-schema-form.component.ts";
 @source "../ng-json-schema-form/src/lib/json-schema-node.component.ts";
 `;
