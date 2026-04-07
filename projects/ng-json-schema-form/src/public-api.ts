@@ -5,3 +5,4 @@ export * from './lib/json-schema-validation.service';
 export * from './lib/json-schema-form.component';
 export * from './lib/json-schema-node.component';
 export * from './lib/json-schema-form.module';
+export * from './lib/json-schema-styles.service';
