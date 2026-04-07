@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+/* Scan only the library source files */
+@source "../lib/json-schema-form.component.ts";
+@source "../lib/json-schema-node.component.ts";

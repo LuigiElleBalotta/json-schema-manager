@@ -17,11 +17,14 @@ import { JsonSchema, SchemaError } from './types';
 import { JsonSchemaNodeComponent } from './json-schema-node.component';
 import { JsonSchemaResolverService } from './json-schema-resolver.service';
 import { JsonSchemaValidationService } from './json-schema-validation.service';
+import { JsonSchemaStylesService } from './json-schema-styles.service';
+import { JSM_STYLES_PROVIDER } from './jsm-styles.generated';
 
 @Component({
   selector: 'jsm-json-schema-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, JsonSchemaNodeComponent],
+  providers: [JSM_STYLES_PROVIDER],
   encapsulation: ViewEncapsulation.None,
   styles: [`
     .jsm-root *, .jsm-root *::before, .jsm-root *::after { box-sizing: border-box; }
@@ -121,8 +124,11 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   constructor(
     private readonly schemaService: JsonSchemaFormService,
     private readonly resolver: JsonSchemaResolverService,
-    private readonly validation: JsonSchemaValidationService
-  ) {}
+    private readonly validation: JsonSchemaValidationService,
+    stylesService: JsonSchemaStylesService,
+  ) {
+    stylesService.inject();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['schema'] || changes['value'] || changes['data']) {
