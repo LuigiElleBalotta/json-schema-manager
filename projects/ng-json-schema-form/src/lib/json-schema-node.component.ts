@@ -1,10 +1,12 @@
 ﻿import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
   Output,
   OnInit,
+  OnDestroy,
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -12,6 +14,7 @@ import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, Reacti
 import { JsonSchema, JsonSchemaType } from './types';
 import { JsonSchemaFormService } from './json-schema-form.service';
 import { JsonSchemaValidationService } from './json-schema-validation.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'jsm-schema-node',
@@ -487,7 +490,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class JsonSchemaNodeComponent implements OnInit {
+export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
   @Input({ required: true }) schema!: JsonSchema;
   @Input({ required: true }) control!: AbstractControl;
   @Input() label = '';
@@ -505,13 +508,22 @@ export class JsonSchemaNodeComponent implements OnInit {
   newPropertyKey = '';
   propertyError = '';
 
+  private valueSub?: Subscription;
+
   constructor(
     private readonly schemaService: JsonSchemaFormService,
-    private readonly validation: JsonSchemaValidationService
+    private readonly validation: JsonSchemaValidationService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     if (this.schema.anyOf?.length) this.selectedAnyOf.add(0);
+    // Subscribe to value changes to trigger CD for OnPush (needed for toggle visual state)
+    this.valueSub = this.control.valueChanges.subscribe(() => this.cdr.markForCheck());
+  }
+
+  ngOnDestroy(): void {
+    this.valueSub?.unsubscribe();
   }
 
   isSimpleChild(key: string): boolean {
