@@ -67,6 +67,7 @@
         "typescript": "~5.9.2"
     },
     "overrides": {
-        "ip-address": "10.1.0"
+        "ip-address": "10.1.0",
+        "htmlparser2": "10.1.0"
     }
 }
