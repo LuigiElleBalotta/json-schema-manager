@@ -1,5 +1,5 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule } from '@angular/forms';
 import { JsonSchema, JsonSchemaFormComponent } from '@elle96/ng-json-schema-manager';
 import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
@@ -12,6 +12,8 @@ import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
   styleUrl: './app.css',
 })
 export class App {
+  @ViewChild(JsonSchemaFormComponent) schemaForm?: JsonSchemaFormComponent;
+
   demoSchemas = DEMO_SCHEMAS;
   selectedId = this.demoSchemas[0].id;
   useCustom = false;
@@ -73,6 +75,12 @@ export class App {
 
   onSchemaReady(): void {
     this.loading = false;
+  }
+
+  /** Simulates an external "Save" button — triggers full validation across all fields. */
+  validateForm(): void {
+    const isValid = this.schemaForm?.validate();
+    console.log('Form valid:', isValid);
   }
 }
 

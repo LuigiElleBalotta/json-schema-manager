@@ -1,5 +1,6 @@
 ﻿import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -90,6 +91,7 @@ import { JsonSchemaStylesService } from './json-schema-styles.service';
           [path]="''"
           [errorsMap]="errorsMap"
           [allowAdditionalProperties]="allowAdditionalProperties"
+          [showErrors]="showErrors"
           label="Root"
           (controlReplaced)="onRootReplaced($event)"
         ></jsm-schema-node>
@@ -116,6 +118,8 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   errorsMap = new Map<string, string[]>();
   schemaErrorList: SchemaError[] = [];
   loading = false;
+  /** When true, all field errors are shown regardless of touched/dirty state. */
+  showErrors = false;
 
   private valueSub?: Subscription;
 
@@ -123,19 +127,42 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     private readonly schemaService: JsonSchemaFormService,
     private readonly resolver: JsonSchemaResolverService,
     private readonly validation: JsonSchemaValidationService,
+    private readonly cdr: ChangeDetectorRef,
     stylesService: JsonSchemaStylesService,
   ) {
     stylesService.inject();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['schema'] || changes['value'] || changes['data']) {
+    if (changes['schema']) {
+      // Schema changed — full rebuild required
+      void this.buildForm();
+    } else if ((changes['value'] || changes['data']) && this.form) {
+      // Only data changed and form already exists — patch values without rebuilding
+      const newData = this.value !== undefined ? this.value : this.data;
+      this.form.patchValue(newData as Record<string, unknown>, { emitEvent: false });
+    } else if (changes['value'] || changes['data']) {
+      // Form not built yet — build it
       void this.buildForm();
     }
   }
 
   ngOnDestroy(): void {
     this.valueSub?.unsubscribe();
+  }
+
+  /**
+   * Marks all fields as touched and forces error display across the entire form.
+   * Call this from an external "Save" or "Submit" button to show all validation errors at once.
+   * Returns true if the form is valid, false otherwise.
+   */
+  validate(): boolean {
+    if (!this.form) return false;
+    this.form.markAllAsTouched();
+    this.showErrors = true;
+    this.updateErrors();
+    this.cdr.detectChanges();
+    return this.form.valid;
   }
 
   private async buildForm(): Promise<void> {
@@ -171,7 +198,8 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
       return;
     }
 
-    const errors = this.validation.validate(this.resolvedSchema, this.rootControl.value);
+    const normalized = this.normalizeValue(this.resolvedSchema, this.rootControl.value);
+    const errors = this.validation.validate(this.resolvedSchema, normalized);
     const map = new Map<string, string[]>();
 
     for (const error of errors) {
@@ -182,6 +210,42 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     }
 
     this.errorsMap = map;
+  }
+
+  /**
+   * Recursively coerces string values to numbers/booleans where the schema declares
+   * type "number" or "integer". This is needed because <input type="number"> always
+   * returns a string to Angular's FormControl, but Ajv validates against the JSON type.
+   */
+  private normalizeValue(schema: JsonSchema, value: unknown): unknown {
+    if (value === null || value === undefined) return value;
+
+    const type = Array.isArray(schema.type)
+      ? schema.type.find((t) => t !== 'null') ?? schema.type[0]
+      : schema.type;
+
+    if ((type === 'number' || type === 'integer') && typeof value === 'string') {
+      const n = Number(value);
+      return isNaN(n) ? value : n;
+    }
+
+    if (type === 'object' && schema.properties && typeof value === 'object' && !Array.isArray(value)) {
+      const obj = value as Record<string, unknown>;
+      const result: Record<string, unknown> = { ...obj };
+      for (const [key, propSchema] of Object.entries(schema.properties)) {
+        if (key in result) {
+          result[key] = this.normalizeValue(propSchema, result[key]);
+        }
+      }
+      return result;
+    }
+
+    if (type === 'array' && Array.isArray(value)) {
+      const itemSchema = (schema.items as JsonSchema | undefined) ?? {};
+      return value.map((item) => this.normalizeValue(itemSchema, item));
+    }
+
+    return value;
   }
 
   onRootReplaced(control: AbstractControl): void {
