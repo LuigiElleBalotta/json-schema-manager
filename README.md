@@ -148,6 +148,37 @@ export class AppModule {}
 | `schemaReady` | `JsonSchema` | Emitted once all `$ref` (local and external) are resolved. The payload is the fully resolved schema. Use it to show/hide a loading indicator. |
 | `valueChange` | `unknown` | Emitted on every form value change. The payload mirrors the schema structure. |
 
+### Public methods
+
+| Method | Returns | Description |
+|---|---|---|
+| `validate()` | `boolean` | Marks all fields as touched, forces error display across the entire form, and returns `true` if the form is valid. Call this from an external **Save** or **Submit** button to show all validation errors at once without requiring the user to touch every field. |
+
+**Example — external save button:**
+
+```ts
+// app.component.ts
+@ViewChild(JsonSchemaFormComponent) schemaForm!: JsonSchemaFormComponent;
+
+save(): void {
+  const isValid = this.schemaForm.validate();
+  if (isValid) {
+    // proceed with save
+  }
+}
+```
+
+```html
+<!-- app.component.html -->
+<jsm-json-schema-form
+  [schema]="schema"
+  [data]="data"
+  (formReady)="form = $event"
+></jsm-json-schema-form>
+
+<button type="button" (click)="save()">Save</button>
+```
+
 ---
 
 ## Supported JSON Schema keywords
@@ -223,8 +254,12 @@ export class AppModule {}
 
 Validation runs on two layers:
 
-1. **Angular validators** — built synchronously from the schema keywords listed above. Errors appear below each field after the control is `dirty`.
+1. **Angular validators** — built synchronously from the schema keywords listed above. Errors appear below each field once the control is `dirty` or `touched` (i.e. after the user has interacted with it).
 2. **Ajv** — runs on the full form value on every change. Errors are mapped to JSON Pointer paths (`/firstName`, `/contact/email`, etc.) and displayed inline next to the relevant field.
+
+Error display rules:
+- Errors are shown on a field as soon as it is **touched** (focus + blur) or **dirty** (value changed).
+- Calling `validate()` on the component forces all errors to show immediately, regardless of touched/dirty state — useful for a Save button that should surface all problems at once.
 
 Draft detection order:
 1. Read `$schema` URI.
@@ -342,6 +377,7 @@ Inputs:
 | `parent` | `FormGroup \| FormArray` | Parent control, needed to replace the control on `oneOf`/`anyOf` change. |
 | `controlKey` | `string \| number` | Key in the parent, needed for the same reason. |
 | `allowAdditionalProperties` | `boolean` | Passed down from `jsm-json-schema-form`. Controls visibility of "Add property" UI. |
+| `showErrors` | `boolean` | When `true`, errors are shown on all fields regardless of touched/dirty state. Set automatically by `validate()`. |
 
 `nodeKind` getter determines which template branch to render:
 `'oneOf' | 'anyOf' | 'allOf' | 'object' | 'array' | 'primitive'`
@@ -359,9 +395,11 @@ When `oneOf` or `anyOf` selection changes, `replaceControl()` rebuilds the subtr
 Selector: `jsm-json-schema-form`
 
 Lifecycle:
-1. `ngOnChanges` → calls `buildForm()` when `schema`, `value`, or `data` changes.
+1. `ngOnChanges` → calls `buildForm()` when `schema` changes. When only `value`/`data` changes and the form already exists, patches values with `patchValue` without rebuilding (preserves focus and touched/dirty state).
 2. `buildForm()` → resolves schema → builds control → emits `formReady` and `schemaReady` → subscribes to `valueChanges` → calls `updateErrors()` on every change.
-3. `updateErrors()` → runs Ajv validation → rebuilds `errorsMap` → passes it to the root `jsm-schema-node`.
+3. `updateErrors()` → normalizes numeric string values to numbers (coercion for `<input type="number">`) → runs Ajv validation → rebuilds `errorsMap` → passes it to the root `jsm-schema-node`.
+
+Public method: `validate(): boolean` — marks all controls as touched, sets `showErrors = true` on all nodes, forces change detection, and returns `form.valid`.
 
 ### Styling conventions
 
