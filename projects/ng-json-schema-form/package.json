@@ -1,6 +1,6 @@
 ﻿{
     "name": "@elle96/ng-json-schema-manager",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "Angular JSON Schema form renderer with Tailwind styling, external $ref support, and reactive forms.",
     "homepage": "https://luigiellebalotta.github.io/json-schema-manager/",
     "repository": {
