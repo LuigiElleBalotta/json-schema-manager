@@ -266,7 +266,7 @@ import { Subscription } from 'rxjs';
         <div class="jsm-combinator-body" *ngIf="activeVariant">
           <jsm-schema-node [schema]="activeVariant" [control]="control" [parent]="parent" [controlKey]="controlKey"
             [path]="path" [errorsMap]="errorsMap" [label]="label" [required]="required"
-            [allowAdditionalProperties]="allowAdditionalProperties"
+            [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
             (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
         </div>
       </div>
@@ -290,7 +290,7 @@ import { Subscription } from 'rxjs';
         <div class="jsm-combinator-body" *ngIf="activeVariant">
           <jsm-schema-node [schema]="activeVariant" [control]="control" [parent]="parent" [controlKey]="controlKey"
             [path]="path" [errorsMap]="errorsMap" [label]="label" [required]="required"
-            [allowAdditionalProperties]="allowAdditionalProperties"
+            [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
             (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
         </div>
       </div>
@@ -308,7 +308,7 @@ import { Subscription } from 'rxjs';
           <div *ngFor="let subSchema of mergedAllOf; let i = index" class="jsm-allof-section">
             <jsm-schema-node [schema]="subSchema" [control]="control" [parent]="parent" [controlKey]="controlKey"
               [path]="path" [errorsMap]="errorsMap" [label]="subSchema.title || ('Section ' + (i + 1))" [required]="required"
-              [allowAdditionalProperties]="allowAdditionalProperties"
+              [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
               (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
           </div>
         </div>
@@ -332,7 +332,7 @@ import { Subscription } from 'rxjs';
               </div>
               <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
                 [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
-                [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties"
+                [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
                 (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
             </div>
           </ng-container>
@@ -347,7 +347,7 @@ import { Subscription } from 'rxjs';
               </div>
               <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
                 [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
-                [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties"
+                [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
                 (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
             </div>
           </ng-container>
@@ -406,7 +406,7 @@ import { Subscription } from 'rxjs';
             </div>
             <jsm-schema-node [schema]="schemaForIndex(i)" [control]="item" [parent]="controlAsArray"
               [controlKey]="i" [path]="pathForChild(i)" [errorsMap]="errorsMap" [label]="label + ' item'"
-              [allowAdditionalProperties]="allowAdditionalProperties"
+              [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
               (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
           </div>
         </div>
@@ -436,21 +436,24 @@ import { Subscription } from 'rxjs';
           <span *ngFor="let badge of metaBadges" class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
         </div>
 
-        <ng-container [ngSwitch]="inputKind">
-          <input *ngSwitchCase="'text'" class="jsm-input"
-            [class.jsm-input--error]="errorsForPath.length && controlAsFormControl.dirty"
+        <ng-container>
+          <input *ngIf="inputKind === 'text'" class="jsm-input"
+            [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
             [attr.type]="inputType" [attr.placeholder]="schema.title || label"
-            [formControl]="controlAsFormControl" />
+            [formControl]="controlAsFormControl"
+            (blur)="onBlur()" />
 
-          <textarea *ngSwitchCase="'textarea'" rows="4" class="jsm-textarea"
-            [class.jsm-textarea--error]="errorsForPath.length && controlAsFormControl.dirty"
+          <textarea *ngIf="inputKind === 'textarea'" rows="4" class="jsm-textarea"
+            [class.jsm-textarea--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
             [attr.placeholder]="schema.title || label"
-            [formControl]="controlAsFormControl"></textarea>
+            [formControl]="controlAsFormControl"
+            (blur)="onBlur()"></textarea>
 
-          <div *ngSwitchCase="'select'" class="jsm-select-wrap">
+          <div *ngIf="inputKind === 'select'" class="jsm-select-wrap">
             <select class="jsm-select"
-              [class.jsm-select--error]="errorsForPath.length && controlAsFormControl.dirty"
-              [formControl]="controlAsFormControl">
+              [class.jsm-select--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+              [formControl]="controlAsFormControl"
+              (blur)="onBlur()">
               <option *ngFor="let option of effectiveSchema.enum" [ngValue]="option">{{ option }}</option>
             </select>
             <svg class="jsm-select-chevron" viewBox="0 0 16 16" fill="none">
@@ -458,7 +461,7 @@ import { Subscription } from 'rxjs';
             </svg>
           </div>
 
-          <label *ngSwitchCase="'checkbox'" class="jsm-toggle-label">
+          <label *ngIf="inputKind === 'checkbox'" class="jsm-toggle-label">
             <span class="jsm-toggle-track" [class.jsm-on]="controlAsFormControl.value">
               <input type="checkbox" class="sr-only" [formControl]="controlAsFormControl" />
               <span class="jsm-toggle-thumb"></span>
@@ -475,8 +478,8 @@ import { Subscription } from 'rxjs';
           {{ effectiveSchema.contentMediaType }}<span *ngIf="effectiveSchema.contentEncoding"> ({{ effectiveSchema.contentEncoding }})</span>
         </p>
 
-        <div *ngIf="errorsForPath.length && controlAsFormControl.dirty" class="jsm-error-list">
-          <p *ngFor="let error of errorsForPath" class="jsm-error-msg">
+        <div *ngIf="allErrors.length && (controlAsFormControl.dirty || isTouched || showErrors)" class="jsm-error-list">
+          <p *ngFor="let error of allErrors" class="jsm-error-msg">
             <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
               <path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -500,6 +503,8 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
   @Input() parent?: FormGroup | FormArray;
   @Input() controlKey?: string | number;
   @Input() allowAdditionalProperties = false;
+  /** When true, errors are shown regardless of touched/dirty state (e.g. triggered by an external save button). */
+  @Input() showErrors = false;
 
   @Output() controlReplaced = new EventEmitter<AbstractControl>();
 
@@ -507,6 +512,8 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
   selectedAnyOf = new Set<number>();
   newPropertyKey = '';
   propertyError = '';
+  /** Tracks whether this primitive control has been touched (for OnPush CD). */
+  isTouched = false;
 
   private valueSub?: Subscription;
 
@@ -518,12 +525,19 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.schema.anyOf?.length) this.selectedAnyOf.add(0);
-    // Subscribe to value changes to trigger CD for OnPush (needed for toggle visual state)
+    // markForCheck is enough for value changes — Angular will re-render in the next CD cycle
+    // without recreating DOM nodes, so the focused input keeps its focus.
     this.valueSub = this.control.valueChanges.subscribe(() => this.cdr.markForCheck());
   }
 
   ngOnDestroy(): void {
     this.valueSub?.unsubscribe();
+  }
+
+  /** Called on blur of primitive inputs to trigger CD after Angular marks the control as touched. */
+  onBlur(): void {
+    this.isTouched = true;
+    this.cdr.markForCheck();
   }
 
   isSimpleChild(key: string): boolean {
@@ -584,6 +598,31 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     return this.effectiveSchema.additionalProperties !== false || !!this.effectiveSchema.patternProperties;
   }
   get errorsForPath(): string[] { return this.errorsMap.get(this.path) ?? []; }
+
+  /** Combined errors: Ajv errors from errorsMap + Angular validator errors on the control. */
+  get allErrors(): string[] {
+    const ajvErrors = this.errorsForPath;
+    const ctrl = this.control;
+    if (!ctrl.errors) return ajvErrors;
+    const angularErrors: string[] = [];
+    const errs = ctrl.errors;
+    if (errs['required']) angularErrors.push('This field is required');
+    if (errs['minlength']) angularErrors.push(`Minimum length is ${errs['minlength'].requiredLength}`);
+    if (errs['maxlength']) angularErrors.push(`Maximum length is ${errs['maxlength'].requiredLength}`);
+    if (errs['min']) angularErrors.push(`Minimum value is ${errs['min'].min}`);
+    if (errs['max']) angularErrors.push(`Maximum value is ${errs['max'].max}`);
+    if (errs['email']) angularErrors.push('Invalid email address');
+    if (errs['pattern']) angularErrors.push('Value does not match the required pattern');
+    if (errs['integer']) angularErrors.push('Value must be an integer');
+    if (errs['exclusiveMinimum']) angularErrors.push('Value must be greater than the minimum');
+    if (errs['exclusiveMaximum']) angularErrors.push('Value must be less than the maximum');
+    if (errs['multipleOf']) angularErrors.push('Value must be a multiple of the required number');
+    if (errs['minItems']) angularErrors.push(`Minimum ${errs['minItems'].requiredLength ?? ''} items required`);
+    if (errs['maxItems']) angularErrors.push(`Maximum ${errs['maxItems'].requiredLength ?? ''} items allowed`);
+    if (errs['uniqueItems']) angularErrors.push('Items must be unique');
+    // Merge: prefer Ajv messages, fall back to Angular messages for errors not covered by Ajv
+    return ajvErrors.length > 0 ? ajvErrors : angularErrors;
+  }
   get metaBadges(): string[] {
     const b: string[] = [];
     if (this.effectiveSchema.deprecated) b.push('Deprecated');
