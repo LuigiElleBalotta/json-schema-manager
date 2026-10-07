@@ -167,6 +167,23 @@ describe('NumericInputDirective', () => {
     expect(emitted).toEqual([]);
   });
 
+  it('keeps the text being typed when the same number is written back', () => {
+    render(null);
+    type('45,');
+    host.control.setValue(45, { emitEvent: false });
+    expect(input.value).toBe('45,');
+    type('45,5');
+    host.control.setValue(45.5, { emitEvent: false });
+    expect(input.value).toBe('45,5');
+  });
+
+  it('rewrites the text when a different number is written', () => {
+    render(null);
+    type('45,');
+    host.control.setValue(7, { emitEvent: false });
+    expect(input.value).toBe('7');
+  });
+
   it('uses a dot when configured', () => {
     render(46.0707, '.');
     expect(input.value).toBe('46.0707');

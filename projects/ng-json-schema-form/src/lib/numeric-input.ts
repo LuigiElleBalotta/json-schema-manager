@@ -96,6 +96,10 @@ export class NumericInputDirective implements ControlValueAccessor, OnChanges {
 
   writeValue(value: unknown): void {
     this._model = value ?? null;
+    // Keep the text being typed when it already means this number ("45," for 45): rewriting it would drop the separator.
+    if (typeof value === 'number' && parseNumericText(this._el.nativeElement.value) === value) {
+      return;
+    }
     this._show(formatNumeric(value, this.jsmDecimalSeparator));
   }
 

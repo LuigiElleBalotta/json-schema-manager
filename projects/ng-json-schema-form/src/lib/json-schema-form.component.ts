@@ -130,6 +130,8 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   showErrors = false;
 
   private valueSub?: Subscription;
+  /** Last value emitted through valueChange (same reference the parent gets back through `data`/`value`). */
+  private lastEmitted: unknown;
 
   constructor(
     private readonly schemaService: JsonSchemaFormService,
@@ -152,7 +154,11 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     } else if ((changes['value'] || changes['data']) && this.form) {
       // Only data changed and form already exists — patch values without rebuilding
       const newData = this.value !== undefined ? this.value : this.data;
-      this.form.patchValue(newData as Record<string, unknown>, { emitEvent: false });
+      // The parent usually feeds back what valueChange just emitted: patching it would overwrite the text being
+      // typed (e.g. "45," would become "45"), so a round trip of the emitted value is ignored.
+      if (newData !== this.lastEmitted) {
+        this.form.patchValue(newData as Record<string, unknown>, { emitEvent: false });
+      }
     } else if (changes['value'] || changes['data']) {
       // Form not built yet — build it
       void this.buildForm();
@@ -243,7 +249,8 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     this.updateErrors();
     this.valueSub = this.form.valueChanges.subscribe(() => {
       this.updateErrors();
-      this.valueChange.emit(this.resolvedSchema ? normalizeValue(this.resolvedSchema, this.rootControl.value) : this.rootControl.value);
+      this.lastEmitted = this.resolvedSchema ? normalizeValue(this.resolvedSchema, this.rootControl.value) : this.rootControl.value;
+      this.valueChange.emit(this.lastEmitted);
     });
   }
 }

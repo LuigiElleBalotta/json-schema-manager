@@ -8,13 +8,22 @@ import { JsonSchema } from './types';
   standalone: true,
   imports: [JsonSchemaFormComponent],
   template: `<jsm-json-schema-form [schema]="schema" [data]="data" [decimalSeparator]="separator"
-    (valueChange)="emitted.push($event)"></jsm-json-schema-form>`,
+    (valueChange)="onChange($event)"></jsm-json-schema-form>`,
 })
 class HostComponent {
   schema: JsonSchema = {};
   data: unknown = {};
   separator: DecimalSeparator = ',';
   emitted: Array<unknown> = [];
+  /** Like the manager pages: the emitted value is fed back through `data`. */
+  feedBack = false;
+
+  onChange(value: unknown): void {
+    this.emitted.push(value);
+    if (this.feedBack) {
+      this.data = value;
+    }
+  }
 }
 
 describe('JsonSchemaFormComponent numeric fields', () => {
@@ -115,6 +124,27 @@ describe('JsonSchemaFormComponent numeric fields', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('0,1');
     expect(fixture.nativeElement.textContent).not.toContain('0.1');
+  });
+
+  it('keeps what is typed when the parent feeds the emitted value back through data', async () => {
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.schema = schema;
+    host.data = { zoom: 13 };
+    host.feedBack = true;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.debugElement.children[0].injector.get(ChangeDetectorRef).markForCheck();
+    fixture.detectChanges();
+    form = fixture.debugElement.children[0].componentInstance;
+
+    type('minZoom', '45,');
+    fixture.detectChanges();
+    expect(inputOf('minZoom').value).toBe('45,');
+    type('minZoom', '45,5');
+    fixture.detectChanges();
+    expect(inputOf('minZoom').value).toBe('45,5');
+    expect(host.emitted[host.emitted.length - 1]).toEqual(jasmine.objectContaining({ minZoom: 45.5 }));
   });
 
   it('keeps the dot with the default separator', async () => {
