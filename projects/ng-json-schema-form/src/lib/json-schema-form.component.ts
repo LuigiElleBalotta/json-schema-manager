@@ -19,11 +19,14 @@ import { JsonSchemaNodeComponent } from './json-schema-node.component';
 import { JsonSchemaResolverService } from './json-schema-resolver.service';
 import { JsonSchemaValidationService } from './json-schema-validation.service';
 import { JsonSchemaStylesService } from './json-schema-styles.service';
+import { normalizeValue } from './normalize-value';
+import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers } from './numeric-input';
 
 @Component({
   selector: 'jsm-json-schema-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, JsonSchemaNodeComponent],
+  providers: [JsonSchemaFormOptions],
   encapsulation: ViewEncapsulation.None,
   styles: [`
     .jsm-root *, .jsm-root *::before, .jsm-root *::after { box-sizing: border-box; }
@@ -106,6 +109,11 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   @Input() value?: unknown;
   @Input() data?: unknown;
   @Input() allowAdditionalProperties = false;
+  /**
+   * Decimal separator of number/integer fields. `,` shows and accepts `0,5` (both `,` and `.` are accepted as input
+   * either way); the emitted value is always a JSON number.
+   */
+  @Input() decimalSeparator: DecimalSeparator = '.';
 
   @Output() formReady = new EventEmitter<FormGroup>();
   @Output() valueChange = new EventEmitter<unknown>();
@@ -128,12 +136,16 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     private readonly resolver: JsonSchemaResolverService,
     private readonly validation: JsonSchemaValidationService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly options: JsonSchemaFormOptions,
     stylesService: JsonSchemaStylesService,
   ) {
     stylesService.inject();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['decimalSeparator']) {
+      this.options.decimalSeparator = this.decimalSeparator;
+    }
     if (changes['schema']) {
       // Schema changed — full rebuild required
       void this.buildForm();
@@ -198,54 +210,18 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
       return;
     }
 
-    const normalized = this.normalizeValue(this.resolvedSchema, this.rootControl.value);
+    const normalized = normalizeValue(this.resolvedSchema, this.rootControl.value);
     const errors = this.validation.validate(this.resolvedSchema, normalized);
     const map = new Map<string, string[]>();
 
     for (const error of errors) {
       const path = error.instancePath ?? '';
       const messages = map.get(path) ?? [];
-      messages.push(error.message ?? error.keyword);
+      messages.push(localizeNumbers(error.message ?? error.keyword, this.decimalSeparator));
       map.set(path, messages);
     }
 
     this.errorsMap = map;
-  }
-
-  /**
-   * Recursively coerces string values to numbers/booleans where the schema declares
-   * type "number" or "integer". This is needed because <input type="number"> always
-   * returns a string to Angular's FormControl, but Ajv validates against the JSON type.
-   */
-  private normalizeValue(schema: JsonSchema, value: unknown): unknown {
-    if (value === null || value === undefined) return value;
-
-    const type = Array.isArray(schema.type)
-      ? schema.type.find((t) => t !== 'null') ?? schema.type[0]
-      : schema.type;
-
-    if ((type === 'number' || type === 'integer') && typeof value === 'string') {
-      const n = Number(value);
-      return isNaN(n) ? value : n;
-    }
-
-    if (type === 'object' && schema.properties && typeof value === 'object' && !Array.isArray(value)) {
-      const obj = value as Record<string, unknown>;
-      const result: Record<string, unknown> = { ...obj };
-      for (const [key, propSchema] of Object.entries(schema.properties)) {
-        if (key in result) {
-          result[key] = this.normalizeValue(propSchema, result[key]);
-        }
-      }
-      return result;
-    }
-
-    if (type === 'array' && Array.isArray(value)) {
-      const itemSchema = (schema.items as JsonSchema | undefined) ?? {};
-      return value.map((item) => this.normalizeValue(itemSchema, item));
-    }
-
-    return value;
   }
 
   onRootReplaced(control: AbstractControl): void {
@@ -267,7 +243,7 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     this.updateErrors();
     this.valueSub = this.form.valueChanges.subscribe(() => {
       this.updateErrors();
-      this.valueChange.emit(this.rootControl.value);
+      this.valueChange.emit(this.resolvedSchema ? normalizeValue(this.resolvedSchema, this.rootControl.value) : this.rootControl.value);
     });
   }
 }

@@ -4,6 +4,7 @@
   Component,
   EventEmitter,
   Input,
+  Optional,
   Output,
   OnInit,
   OnDestroy,
@@ -15,11 +16,12 @@ import { JsonSchema, JsonSchemaType } from './types';
 import { JsonSchemaFormService } from './json-schema-form.service';
 import { JsonSchemaValidationService } from './json-schema-validation.service';
 import { Subscription } from 'rxjs';
+import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputDirective } from './numeric-input';
 
 @Component({
   selector: 'jsm-schema-node',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NumericInputDirective],
   encapsulation: ViewEncapsulation.None,
   styles: [`
     /* ── Layout ── */
@@ -437,6 +439,13 @@ import { Subscription } from 'rxjs';
         </div>
 
         <ng-container>
+          <input *ngIf="inputKind === 'number'" jsmNumeric type="text" inputmode="decimal" class="jsm-input"
+            [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+            [jsmDecimalSeparator]="decimalSeparator" [attr.data-step]="numericStep"
+            [attr.placeholder]="schema.title || label"
+            [formControl]="controlAsFormControl"
+            (blur)="onBlur()" />
+
           <input *ngIf="inputKind === 'text'" class="jsm-input"
             [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
             [attr.type]="inputType" [attr.placeholder]="schema.title || label"
@@ -521,6 +530,7 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     private readonly schemaService: JsonSchemaFormService,
     private readonly validation: JsonSchemaValidationService,
     private readonly cdr: ChangeDetectorRef,
+    @Optional() private readonly options: JsonSchemaFormOptions | null,
   ) {}
 
   ngOnInit(): void {
@@ -569,9 +579,19 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     return this.schemaService.resolveType(this.effectiveSchema) ?? 'string';
   }
 
-  get inputKind(): 'text' | 'textarea' | 'select' | 'checkbox' {
+  get decimalSeparator(): DecimalSeparator {
+    return this.options?.decimalSeparator ?? '.';
+  }
+
+  /** `multipleOf` of this node's own schema, exposed as step metadata. */
+  get numericStep(): string {
+    return this.effectiveSchema.multipleOf ? String(this.effectiveSchema.multipleOf) : 'any';
+  }
+
+  get inputKind(): 'text' | 'number' | 'textarea' | 'select' | 'checkbox' {
     if (this.effectiveSchema.enum) return 'select';
     if (this.resolvedType === 'boolean') return 'checkbox';
+    if (this.resolvedType === 'number' || this.resolvedType === 'integer') return 'number';
     if (this.effectiveSchema.format === 'textarea' || (this.effectiveSchema.maxLength ?? 0) > 200) return 'textarea';
     return 'text';
   }
@@ -621,7 +641,8 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     if (errs['maxItems']) angularErrors.push(`Maximum ${errs['maxItems'].requiredLength ?? ''} items allowed`);
     if (errs['uniqueItems']) angularErrors.push('Items must be unique');
     // Merge: prefer Ajv messages, fall back to Angular messages for errors not covered by Ajv
-    return ajvErrors.length > 0 ? ajvErrors : angularErrors;
+    const messages = ajvErrors.length > 0 ? ajvErrors : angularErrors;
+    return messages.map((message) => localizeNumbers(message, this.decimalSeparator));
   }
   get metaBadges(): string[] {
     const b: string[] = [];

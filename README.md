@@ -139,6 +139,7 @@ export class AppModule {}
 | `data` | `unknown` | `undefined` | Initial form data. Merged with schema defaults. |
 | `value` | `unknown` | `undefined` | Alias for `data`. |
 | `allowAdditionalProperties` | `boolean` | `false` | When `true`, shows an "Add property" UI on every object node that permits extra keys (`additionalProperties !== false`). When `false` (default) the UI is never shown, regardless of the schema. |
+| `decimalSeparator` | `'.' \| ','` | `'.'` | Separator shown in `number`/`integer` fields. With `','` the user sees and types `0,5`; `,` and `.` are accepted as input in both modes. The emitted value is always a JSON number. |
 
 ### Outputs
 
@@ -146,7 +147,7 @@ export class AppModule {}
 |---|---|---|
 | `formReady` | `FormGroup` | Emitted once the reactive form is built. Use this to access the `FormGroup` instance directly. |
 | `schemaReady` | `JsonSchema` | Emitted once all `$ref` (local and external) are resolved. The payload is the fully resolved schema. Use it to show/hide a loading indicator. |
-| `valueChange` | `unknown` | Emitted on every form value change. The payload mirrors the schema structure. |
+| `valueChange` | `unknown` | Emitted on every form value change. The payload mirrors the schema structure and follows its types: `number`/`integer` fields are JSON numbers (`13`, `0.5`), never strings. An empty numeric field leaves its key out of the payload (never `""` or `0`); if it is required the form is invalid. An `integer` with decimals is not truncated, validation reports it. Nothing is emitted just by rendering the form. |
 
 ### Public methods
 
@@ -297,6 +298,8 @@ projects/ng-json-schema-form/src/
     ├── json-schema-form.service.ts      # Builds the Angular reactive form tree
     ├── json-schema-resolver.service.ts  # Resolves $ref (local + external fetch)
     ├── json-schema-validation.service.ts# Ajv wrapper — draft detection + validate()
+    ├── normalize-value.ts               # Schema-driven value coercion (strings → numbers), used for Ajv and valueChange
+    ├── numeric-input.ts                 # ControlValueAccessor for number/integer inputs + decimalSeparator helpers
     └── json-schema-form.module.ts       # NgModule wrapper for non-standalone usage
 ```
 
