@@ -21,6 +21,7 @@ import { JsonSchemaValidationService } from './json-schema-validation.service';
 import { JsonSchemaStylesService } from './json-schema-styles.service';
 import { normalizeValue } from './normalize-value';
 import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers } from './numeric-input';
+import { DEFAULT_LABELS, JsonSchemaFormLabels } from './labels';
 
 @Component({
   selector: 'jsm-json-schema-form',
@@ -49,16 +50,16 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers } from './nume
     <div class="jsm-root">
     <form class="w-full space-y-5">
       <div *ngIf="resolvedSchema?.title || resolvedSchema?.description" class="space-y-0.5">
-        <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{{ resolvedSchema?.title || 'Form' }}</h2>
+        <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{{ resolvedSchema?.title || options.labels.formTitle }}</h2>
         <p *ngIf="resolvedSchema?.description" class="text-sm text-slate-500 dark:text-slate-400">{{ resolvedSchema?.description }}</p>
       </div>
 
-      <div *ngIf="loading" class="flex items-center gap-2 py-6 text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
-        <svg class="h-4 w-4 animate-spin text-indigo-500 dark:text-indigo-400" viewBox="0 0 24 24" fill="none">
+      <div *ngIf="loading" class="flex items-center gap-2 py-6 text-sm text-slate-500 dark:text-slate-400" role="status">
+        <svg class="h-4 w-4 animate-spin text-indigo-500 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
         </svg>
-        Resolving schema&hellip;
+        {{ options.labels.resolving }}
       </div>
 
       <!-- schema structural errors panel -->
@@ -66,16 +67,16 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers } from './nume
         class="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-3"
         role="alert">
         <div class="flex items-center gap-2">
-          <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" viewBox="0 0 16 16" fill="none">
+          <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
             <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           <span class="text-sm font-semibold text-amber-800 dark:text-amber-300">
-            Schema errors ({{ schemaErrorList.length }})
+            {{ options.labels.schemaErrorsTitle }} ({{ schemaErrorList.length }})
           </span>
         </div>
         <p class="text-xs text-amber-700 dark:text-amber-400">
-          The schema has structural issues. Fix them to get a valid form.
+          {{ options.labels.schemaErrorsHint }}
         </p>
         <div class="space-y-2">
           <div *ngFor="let err of schemaErrorList"
@@ -114,6 +115,8 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
    * either way); the emitted value is always a JSON number.
    */
   @Input() decimalSeparator: DecimalSeparator = '.';
+  /** Texts shown by the form (translate them here); omitted keys keep the English default. */
+  @Input() labels: Partial<JsonSchemaFormLabels> = {};
 
   @Output() formReady = new EventEmitter<FormGroup>();
   @Output() valueChange = new EventEmitter<unknown>();
@@ -138,7 +141,7 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
     private readonly resolver: JsonSchemaResolverService,
     private readonly validation: JsonSchemaValidationService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly options: JsonSchemaFormOptions,
+    protected readonly options: JsonSchemaFormOptions,
     stylesService: JsonSchemaStylesService,
   ) {
     stylesService.inject();
@@ -147,6 +150,9 @@ export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['decimalSeparator']) {
       this.options.decimalSeparator = this.decimalSeparator;
+    }
+    if (changes['labels']) {
+      this.options.labels = { ...DEFAULT_LABELS, ...this.labels };
     }
     if (changes['schema']) {
       // Schema changed — full rebuild required

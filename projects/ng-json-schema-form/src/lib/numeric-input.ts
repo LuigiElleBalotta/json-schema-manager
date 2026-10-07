@@ -1,5 +1,6 @@
 import { Directive, ElementRef, forwardRef, Injectable, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { DEFAULT_LABELS, JsonSchemaFormLabels } from './labels';
 
 /** Character shown between the integer and decimal part of a number. */
 export type DecimalSeparator = '.' | ',';
@@ -10,6 +11,7 @@ export type DecimalSeparator = '.' | ',';
 @Injectable()
 export class JsonSchemaFormOptions {
   decimalSeparator: DecimalSeparator = '.';
+  labels: JsonSchemaFormLabels = DEFAULT_LABELS;
 }
 
 const COMPLETE_NUMBER = /^-?(\d+[.,]?\d*|[.,]\d+)$/;

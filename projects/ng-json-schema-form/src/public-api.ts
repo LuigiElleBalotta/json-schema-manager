@@ -9,3 +9,4 @@ export * from './lib/json-schema-styles.service';
 
 export * from './lib/normalize-value';
 export * from './lib/numeric-input';
+export * from './lib/labels';

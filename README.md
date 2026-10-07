@@ -140,6 +140,7 @@ export class AppModule {}
 | `value` | `unknown` | `undefined` | Alias for `data`. |
 | `allowAdditionalProperties` | `boolean` | `false` | When `true`, shows an "Add property" UI on every object node that permits extra keys (`additionalProperties !== false`). When `false` (default) the UI is never shown, regardless of the schema. |
 | `decimalSeparator` | `'.' \| ','` | `'.'` | Separator shown in `number`/`integer` fields. With `','` the user sees and types `0,5`; `,` and `.` are accepted as input in both modes. The emitted value is always a JSON number. |
+| `labels` | `Partial<JsonSchemaFormLabels>` | English texts | Texts shown by the form ("Add item", "Remove", error messages, ...). Pass the keys you want to translate; `{n}` is replaced by the item/option number. See `JsonSchemaFormLabels` / `DEFAULT_LABELS`. |
 
 ### Outputs
 
@@ -250,6 +251,19 @@ save(): void {
 | `$id` | Sets the base URL for resolving relative external refs. |
 
 ---
+
+## Accessibility
+
+The rendered form targets **WCAG 2.2 level AA** for form controls:
+
+- every label is bound to its control (`for`/`id`), required fields set `aria-required` (the visible `*` is hidden from screen readers) and hints, examples and errors are linked with `aria-describedby`; there is no placeholder repeating the label
+- invalid fields set `aria-invalid` and their errors are announced (`role="alert"`) once they are shown (after blur or `validate()`), never on first render
+- keyboard focus is always visible, also on the visible part of the toggle and the anyOf options; `oneOf` uses the WAI-ARIA tabs pattern (arrow keys, Home, End)
+- buttons are at least 24 px high and have a name with context ("Add item Tags", "Remove Item 2"); decorative icons are hidden from assistive technology
+- text and UI colours reach 4.5:1 / 3:1 in light and dark mode
+- all fixed texts can be translated through the `labels` input
+
+The test suite runs axe-core (WCAG 2.2 A/AA rules) on a form that renders every node kind, with and without errors.
 
 ## Validation
 

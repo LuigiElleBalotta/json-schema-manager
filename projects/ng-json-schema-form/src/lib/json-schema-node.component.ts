@@ -17,6 +17,9 @@ import { JsonSchemaFormService } from './json-schema-form.service';
 import { JsonSchemaValidationService } from './json-schema-validation.service';
 import { Subscription } from 'rxjs';
 import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputDirective } from './numeric-input';
+import { DEFAULT_LABELS, formatLabel, JsonSchemaFormLabels } from './labels';
+
+let nextNodeId = 0;
 
 @Component({
   selector: 'jsm-schema-node',
@@ -28,23 +31,23 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-field        { display:flex; flex-direction:column; gap:.375rem; }
     .jsm-field-label  { display:block; font-size:.8125rem; font-weight:600; color:#374151; }
     .jsm-field-hint   { font-size:.75rem; color:#6b7280; margin:0; line-height:1.4; }
-    .jsm-required     { color:#ef4444; margin-left:.125rem; }
-    .jsm-example      { font-size:.6875rem; color:#9ca3af; }
+    .jsm-required     { color:#dc2626; margin-left:.125rem; }
+    .jsm-example      { font-size:.6875rem; color:#6b7280; margin:0; }
 
     /* ── Inputs ── */
     .jsm-input, .jsm-textarea, .jsm-select {
-      width:100%; border-radius:.5rem; border:1.5px solid #d1d5db;
+      width:100%; border-radius:.5rem; border:1.5px solid #6b7280;
       background:Canvas; padding:.5rem .75rem; font-size:.875rem; color:CanvasText;
       outline:none; box-shadow:0 1px 2px rgba(0,0,0,.04);
       transition:border-color .15s, box-shadow .15s;
       font-family:inherit; box-sizing:border-box;
     }
-    .jsm-input:hover, .jsm-textarea:hover, .jsm-select:hover { border-color:#9ca3af; }
+    .jsm-input:hover, .jsm-textarea:hover, .jsm-select:hover { border-color:#4b5563; }
     .jsm-input:focus, .jsm-textarea:focus, .jsm-select:focus {
       border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.15);
     }
     .jsm-input--error, .jsm-textarea--error, .jsm-select--error {
-      border-color:#f87171 !important; background:#fff5f5;
+      border-color:#dc2626 !important; background:#fff5f5;
     }
     .jsm-input--error:focus, .jsm-textarea--error:focus, .jsm-select--error:focus {
       box-shadow:0 0 0 3px rgba(248,113,113,.2) !important;
@@ -56,15 +59,15 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-select { appearance:none; padding-right:2.25rem; cursor:pointer; }
     .jsm-select-chevron {
       position:absolute; right:.625rem; top:50%; transform:translateY(-50%);
-      width:1rem; height:1rem; color:#9ca3af; pointer-events:none;
+      width:1rem; height:1rem; color:#6b7280; pointer-events:none;
     }
 
     /* ── Toggle switch ── */
-    .jsm-toggle-label { display:inline-flex; align-items:center; gap:.625rem; cursor:pointer; user-select:none; }
+    .jsm-toggle-label { display:inline-flex; align-items:center; gap:.625rem; cursor:pointer; user-select:none; min-height:1.5rem; }
     .jsm-toggle-track {
       position:relative; display:inline-flex; align-items:center;
       width:2.25rem; height:1.25rem; border-radius:9999px; flex-shrink:0;
-      background:#d1d5db; transition:background .2s;
+      background:#6b7280; transition:background .2s;
     }
     .jsm-toggle-track.jsm-on { background:#4f46e5; }
     .jsm-toggle-thumb {
@@ -90,7 +93,7 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-btn-danger {
       display:inline-flex; align-items:center; gap:.25rem;
       padding:.25rem .5rem; border-radius:.375rem; font-size:.75rem;
-      font-weight:600; background:transparent; color:#dc2626;
+      font-weight:600; background:transparent; color:#b91c1c; min-height:1.5rem;
       border:1.5px solid #fca5a5; cursor:pointer;
       transition:background .15s, border-color .15s; font-family:inherit;
     }
@@ -112,7 +115,7 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-badge--readonly   { background:#f1f5f9; color:#475569; }
     .jsm-badge--writeonly  { background:#dbeafe; color:#1e40af; }
     .jsm-badge--not        { background:#fee2e2; color:#991b1b; }
-    .jsm-badge--nullable   { background:#f3f4f6; color:#6b7280; }
+    .jsm-badge--nullable   { background:#f3f4f6; color:#4b5563; }
 
     /* ── Object fieldset ── */
     .jsm-fieldset {
@@ -160,11 +163,11 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-empty-array {
       display:flex; flex-direction:column; align-items:center; gap:.5rem;
       padding:2rem 1rem; border:1.5px dashed #e5e7eb; border-radius:.75rem;
-      color:#9ca3af; font-size:.8125rem; text-align:center;
+      color:#6b7280; font-size:.8125rem; text-align:center;
     }
     .jsm-contains-hint {
       display:flex; align-items:center; gap:.375rem; font-size:.75rem;
-      color:#6366f1; background:#eef2ff; border-radius:.375rem; padding:.375rem .625rem;
+      color:#4f46e5; background:#eef2ff; border-radius:.375rem; padding:.375rem .625rem;
     }
 
     /* ── Combinators ── */
@@ -185,7 +188,7 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-anyof-options { display:flex; flex-wrap:wrap; gap:.5rem; padding:.75rem 1rem; border-bottom:1.5px solid #e5e7eb; }
     .jsm-anyof-option {
       display:inline-flex; align-items:center; gap:.375rem; padding:.375rem .75rem;
-      border-radius:9999px; border:1.5px solid #e5e7eb; font-size:.8125rem;
+      border-radius:9999px; border:1.5px solid #6b7280; font-size:.8125rem;
       font-weight:500; color:#6b7280; cursor:pointer; transition:all .15s; background:transparent;
     }
     .jsm-anyof-option:hover { border-color:#a5b4fc; color:#4f46e5; }
@@ -200,14 +203,32 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .jsm-badge--anyof  { background:#ede9fe; color:#5b21b6; }
     .jsm-badge--allof  { background:#ccfbf1; color:#065f46; }
 
+    /* ── Keyboard focus (WCAG 2.4.7 / 1.4.11) ── */
+    .jsm-input:focus-visible, .jsm-textarea:focus-visible, .jsm-select:focus-visible,
+    .jsm-btn-primary:focus-visible, .jsm-btn-danger:focus-visible, .jsm-tab:focus-visible {
+      outline:2px solid #4f46e5; outline-offset:2px;
+    }
+    .jsm-toggle-label:has(input:focus-visible) .jsm-toggle-track,
+    .jsm-anyof-option:has(input:focus-visible) {
+      outline:2px solid #4f46e5; outline-offset:2px;
+    }
+
     /* ── Dark mode ── */
     .dark .jsm-field-label  { color:#d1d5db; }
+    .dark .jsm-required     { color:#f87171; }
+    .dark .jsm-example      { color:#9ca3af; }
+    .dark .jsm-input:focus-visible, .dark .jsm-textarea:focus-visible, .dark .jsm-select:focus-visible,
+    .dark .jsm-btn-primary:focus-visible, .dark .jsm-btn-danger:focus-visible, .dark .jsm-tab:focus-visible,
+    .dark .jsm-toggle-label:has(input:focus-visible) .jsm-toggle-track,
+    .dark .jsm-anyof-option:has(input:focus-visible) { outline-color:#818cf8; }
+    .dark .jsm-btn-danger { color:#f87171; border-color:#f87171; }
+    .dark .jsm-btn-danger:hover { background:rgba(248,113,113,.15); }
     .dark .jsm-field-hint   { color:#9ca3af; }
-    .dark .jsm-toggle-track { background:#475569; }
-    .dark .jsm-toggle-track.jsm-on { background:#4f46e5; }
+    .dark .jsm-toggle-track { background:#64748b; }
+    .dark .jsm-toggle-track.jsm-on { background:#6366f1; }
     .dark .jsm-toggle-text  { color:#d1d5db; }
     .dark .jsm-input, .dark .jsm-textarea, .dark .jsm-select {
-      border-color:#475569; color:#f1f5f9;
+      border-color:#64748b; color:#f1f5f9;
     }
     .dark .jsm-input:focus, .dark .jsm-textarea:focus, .dark .jsm-select:focus {
       border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.2);
@@ -225,16 +246,16 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .dark .jsm-tab { color:#94a3b8; }
     .dark .jsm-tab--active { color:#818cf8; border-bottom-color:#818cf8; }
     .dark .jsm-anyof-options { border-color:#334155; }
-    .dark .jsm-anyof-option { border-color:#334155; color:#94a3b8; background:#0f172a; }
+    .dark .jsm-anyof-option { border-color:#64748b; color:#94a3b8; background:#0f172a; }
     .dark .jsm-anyof-option--active { border-color:#6366f1; background:rgba(99,102,241,.15); color:#818cf8; }
     .dark .jsm-allof-section { border-left-color:#3730a3; }
     .dark .jsm-array-item { border-color:#334155; }
     .dark .jsm-array-item:focus-within { border-color:#6366f1; }
     .dark .jsm-array-index { background:rgba(99,102,241,.2); color:#818cf8; }
-    .dark .jsm-empty-array { border-color:#334155; color:#64748b; }
+    .dark .jsm-empty-array { border-color:#334155; color:#94a3b8; }
     .dark .jsm-contains-hint { background:rgba(99,102,241,.15); color:#818cf8; }
     .dark .jsm-add-prop { background:rgba(30,41,59,.4); border-color:#475569; }
-    .dark .jsm-add-prop-label { color:#64748b; }
+    .dark .jsm-add-prop-label { color:#94a3b8; }
     .dark .jsm-dynamic-key-header { background:rgba(30,41,59,.5); border-color:#475569; }
     .dark .jsm-dynamic-key-label { color:#94a3b8; }
     .dark .jsm-error-msg { color:#f87171; }
@@ -244,7 +265,7 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
     .dark .jsm-badge--writeonly  { background:rgba(37,99,235,.2); color:#60a5fa; }
     .dark .jsm-badge--not        { background:rgba(220,38,38,.2); color:#f87171; }
     .dark .jsm-badge--nullable   { background:#1e293b; color:#94a3b8; }
-    .dark .jsm-select-chevron    { color:#64748b; }
+    .dark .jsm-select-chevron    { color:#94a3b8; }
   `],
   template: `
     <ng-container [ngSwitch]="nodeKind">
@@ -258,14 +279,17 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
           </div>
           <span class="jsm-combinator-badge jsm-badge--oneof">oneOf</span>
         </div>
-        <div class="jsm-oneof-tabs">
-          <button *ngFor="let option of schema.oneOf; let i = index" type="button"
+        <div class="jsm-oneof-tabs" role="tablist" [attr.aria-label]="schema.title || label || null" (keydown)="onOneOfKeydown($event)">
+          <button *ngFor="let option of schema.oneOf; let i = index" type="button" role="tab"
             class="jsm-tab" [class.jsm-tab--active]="selectedOneOf === i"
-            (click)="selectedOneOf = i; onOneOfChange()">
-            {{ option.title || ('Option ' + (i + 1)) }}
+            [id]="nodeId + '-tab-' + i" [attr.aria-selected]="selectedOneOf === i"
+            [attr.aria-controls]="nodeId + '-panel'" [attr.tabindex]="selectedOneOf === i ? 0 : -1"
+            (click)="selectOneOf(i)">
+            {{ option.title || optionLabel(i) }}
           </button>
         </div>
-        <div class="jsm-combinator-body" *ngIf="activeVariant">
+        <div class="jsm-combinator-body" *ngIf="activeVariant" role="tabpanel" [id]="nodeId + '-panel'"
+          [attr.aria-labelledby]="nodeId + '-tab-' + selectedOneOf">
           <jsm-schema-node [schema]="activeVariant" [control]="control" [parent]="parent" [controlKey]="controlKey"
             [path]="path" [errorsMap]="errorsMap" [label]="label" [required]="required"
             [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
@@ -282,11 +306,11 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
           </div>
           <span class="jsm-combinator-badge jsm-badge--anyof">anyOf</span>
         </div>
-        <div class="jsm-anyof-options">
+        <div class="jsm-anyof-options" role="group" [attr.aria-label]="schema.title || label || null">
           <label *ngFor="let option of schema.anyOf; let i = index"
             class="jsm-anyof-option" [class.jsm-anyof-option--active]="selectedAnyOf.has(i)">
             <input type="checkbox" class="sr-only" [checked]="selectedAnyOf.has(i)" (change)="toggleAnyOf(i)" />
-            {{ option.title || ('Option ' + (i + 1)) }}
+            {{ option.title || optionLabel(i) }}
           </label>
         </div>
         <div class="jsm-combinator-body" *ngIf="activeVariant">
@@ -309,7 +333,7 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
         <div class="jsm-combinator-body">
           <div *ngFor="let subSchema of mergedAllOf; let i = index" class="jsm-allof-section">
             <jsm-schema-node [schema]="subSchema" [control]="control" [parent]="parent" [controlKey]="controlKey"
-              [path]="path" [errorsMap]="errorsMap" [label]="subSchema.title || ('Section ' + (i + 1))" [required]="required"
+              [path]="path" [errorsMap]="errorsMap" [label]="subSchema.title || sectionLabel(i)" [required]="required"
               [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
               (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
           </div>
@@ -329,8 +353,9 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
           <ng-container *ngFor="let key of simpleKeys">
             <div style="display:flex;flex-direction:column;gap:.25rem;">
               <div *ngIf="isDynamicKey(key)" class="jsm-dynamic-key-header">
-                <span class="jsm-dynamic-key-label">{{ key }}</span>
-                <button type="button" class="jsm-btn-danger" (click)="removeDynamicKey(key)">Remove</button>
+                <span class="jsm-dynamic-key-label" [id]="keyId(key)">{{ key }}</span>
+                <button type="button" class="jsm-btn-danger" [id]="keyId(key) + '-remove'"
+                  [attr.aria-labelledby]="keyId(key) + '-remove ' + keyId(key)" (click)="removeDynamicKey(key)">{{ l.remove }}</button>
               </div>
               <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
                 [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
@@ -344,8 +369,9 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
           <ng-container *ngFor="let key of complexKeys">
             <div style="display:flex;flex-direction:column;gap:.25rem;">
               <div *ngIf="isDynamicKey(key)" class="jsm-dynamic-key-header">
-                <span class="jsm-dynamic-key-label">{{ key }}</span>
-                <button type="button" class="jsm-btn-danger" (click)="removeDynamicKey(key)">Remove</button>
+                <span class="jsm-dynamic-key-label" [id]="keyId(key)">{{ key }}</span>
+                <button type="button" class="jsm-btn-danger" [id]="keyId(key) + '-remove'"
+                  [attr.aria-labelledby]="keyId(key) + '-remove ' + keyId(key)" (click)="removeDynamicKey(key)">{{ l.remove }}</button>
               </div>
               <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
                 [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
@@ -355,45 +381,48 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
           </ng-container>
         </div>
 
-        <div *ngIf="canAddProperty" class="jsm-add-prop">
-          <p class="jsm-add-prop-label">Add property</p>
+        <div *ngIf="canAddProperty" class="jsm-add-prop" role="group" [attr.aria-labelledby]="nodeId + '-addprop'">
+          <p class="jsm-add-prop-label" [id]="nodeId + '-addprop'">{{ l.addProperty }}</p>
           <div class="jsm-add-prop-row">
-            <input class="jsm-input jsm-input--sm" style="flex:1;" [(ngModel)]="newPropertyKey" placeholder="propertyName" />
-            <button type="button" class="jsm-btn-primary" (click)="addDynamicProperty()">Add</button>
+            <input class="jsm-input jsm-input--sm" style="flex:1;" [(ngModel)]="newPropertyKey" [ngModelOptions]="{standalone: true}"
+              [attr.aria-label]="l.propertyName" [attr.placeholder]="l.propertyName"
+              [attr.aria-invalid]="propertyError ? 'true' : null" [attr.aria-describedby]="propertyError ? nodeId + '-prop-error' : null" />
+            <button type="button" class="jsm-btn-primary" (click)="addDynamicProperty()">{{ l.add }}</button>
           </div>
-          <p *ngIf="propertyError" class="jsm-error-msg">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <p *ngIf="propertyError" class="jsm-error-msg" role="alert" [id]="nodeId + '-prop-error'">
+            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             {{ propertyError }}
           </p>
         </div>
 
-        <div *ngIf="errorsForPath.length" class="jsm-error-list" style="margin-top:.75rem;">
+        <div *ngIf="errorsForPath.length" class="jsm-error-list" role="alert" style="margin-top:.75rem;">
           <p *ngFor="let error of errorsForPath" class="jsm-error-msg">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            {{ error }}
+            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            {{ localize(error) }}
           </p>
         </div>
       </fieldset>
 
       <!-- ═══ array ═══ -->
-      <div *ngSwitchCase="'array'" class="jsm-array-block">
+      <div *ngSwitchCase="'array'" class="jsm-array-block" role="group" [attr.aria-labelledby]="nodeId + '-title'">
         <div class="jsm-array-header">
           <div>
-            <p class="jsm-array-title">
-              {{ schema.title || label }}<span *ngIf="required" style="color:#ef4444;margin-left:.125rem;">*</span>
+            <p class="jsm-array-title" [id]="nodeId + '-title'">
+              {{ schema.title || label }}<span *ngIf="required" class="jsm-required" aria-hidden="true">*</span>
             </p>
             <p *ngIf="schema.description" class="jsm-field-hint">{{ schema.description }}</p>
           </div>
-          <button type="button" class="jsm-btn-primary" (click)="addArrayItem()" [disabled]="!canAddArrayItem">
-            <svg style="width:.875rem;height:.875rem;flex-shrink:0;" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Add item
+          <button type="button" class="jsm-btn-primary" [id]="nodeId + '-add'"
+            [attr.aria-labelledby]="nodeId + '-add ' + nodeId + '-title'" (click)="addArrayItem()" [disabled]="!canAddArrayItem">
+            <svg style="width:.875rem;height:.875rem;flex-shrink:0;" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            {{ l.addItem }}
           </button>
         </div>
 
         <div *ngIf="effectiveSchema.contains" class="jsm-contains-hint">
-          Must contain matching item(s)
-          <span *ngIf="effectiveSchema.minContains"> · min {{ effectiveSchema.minContains }}</span>
-          <span *ngIf="effectiveSchema.maxContains"> · max {{ effectiveSchema.maxContains }}</span>
+          {{ l.mustContain }}
+          <span *ngIf="effectiveSchema.minContains"> · {{ fmt(l.min, { n: effectiveSchema.minContains }) }}</span>
+          <span *ngIf="effectiveSchema.maxContains"> · {{ fmt(l.max, { n: effectiveSchema.maxContains }) }}</span>
         </div>
 
         <div *ngIf="metaBadges.length" class="jsm-badge-row">
@@ -401,10 +430,12 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
         </div>
 
         <div class="jsm-array-items" *ngIf="arrayControls.length > 0; else emptyArray">
-          <div *ngFor="let item of arrayControls; let i = index" class="jsm-array-item">
+          <div *ngFor="let item of arrayControls; let i = index" class="jsm-array-item" role="group" [attr.aria-labelledby]="nodeId + '-item-' + i">
             <div class="jsm-array-item-header">
-              <span class="jsm-array-index">{{ i + 1 }}</span>
-              <button type="button" class="jsm-btn-danger" (click)="removeArrayItem(i)">Remove</button>
+              <span class="jsm-array-index" aria-hidden="true">{{ i + 1 }}</span>
+              <span class="sr-only" [id]="nodeId + '-item-' + i">{{ fmt(l.arrayItem, { n: i + 1 }) }}</span>
+              <button type="button" class="jsm-btn-danger" [id]="nodeId + '-remove-' + i"
+                [attr.aria-labelledby]="nodeId + '-remove-' + i + ' ' + nodeId + '-item-' + i" (click)="removeArrayItem(i)">{{ l.remove }}</button>
             </div>
             <jsm-schema-node [schema]="schemaForIndex(i)" [control]="item" [parent]="controlAsArray"
               [controlKey]="i" [path]="pathForChild(i)" [errorsMap]="errorsMap" [label]="label + ' item'"
@@ -414,13 +445,13 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
         </div>
 
         <ng-template #emptyArray>
-          <div class="jsm-empty-array">No items yet — click "Add item" to start.</div>
+          <div class="jsm-empty-array">{{ l.noItems }}</div>
         </ng-template>
 
-        <div *ngIf="errorsForPath.length" class="jsm-error-list">
+        <div *ngIf="errorsForPath.length" class="jsm-error-list" role="alert">
           <p *ngFor="let error of errorsForPath" class="jsm-error-msg">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            {{ error }}
+            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            {{ localize(error) }}
           </p>
         </div>
       </div>
@@ -428,10 +459,10 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
       <!-- ═══ primitive ═══ -->
       <div *ngSwitchDefault class="jsm-field">
         <ng-container *ngIf="inputKind !== 'checkbox'">
-          <label class="jsm-field-label">
-            {{ schema.title || label }}<span *ngIf="required" class="jsm-required">*</span>
+          <label class="jsm-field-label" [attr.for]="nodeId">
+            {{ schema.title || label }}<span *ngIf="required" class="jsm-required" aria-hidden="true">*</span>
           </label>
-          <p *ngIf="schema.description" class="jsm-field-hint">{{ schema.description }}</p>
+          <p *ngIf="schema.description" class="jsm-field-hint" [id]="nodeId + '-hint'">{{ schema.description }}</p>
         </ng-container>
 
         <div *ngIf="metaBadges.length" class="jsm-badge-row">
@@ -439,57 +470,65 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
         </div>
 
         <ng-container>
-          <input *ngIf="inputKind === 'number'" jsmNumeric type="text" inputmode="decimal" class="jsm-input"
+          <input *ngIf="inputKind === 'number'" jsmNumeric type="text" inputmode="decimal" class="jsm-input" [id]="nodeId"
             [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
             [jsmDecimalSeparator]="decimalSeparator" [attr.data-step]="numericStep"
-            [attr.placeholder]="schema.title || label"
+            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+            [attr.aria-describedby]="describedBy"
             [formControl]="controlAsFormControl"
             (blur)="onBlur()" />
 
-          <input *ngIf="inputKind === 'text'" class="jsm-input"
+          <input *ngIf="inputKind === 'text'" class="jsm-input" [id]="nodeId"
             [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
-            [attr.type]="inputType" [attr.placeholder]="schema.title || label"
+            [attr.type]="inputType"
+            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+            [attr.aria-describedby]="describedBy"
             [formControl]="controlAsFormControl"
             (blur)="onBlur()" />
 
-          <textarea *ngIf="inputKind === 'textarea'" rows="4" class="jsm-textarea"
+          <textarea *ngIf="inputKind === 'textarea'" rows="4" class="jsm-textarea" [id]="nodeId"
             [class.jsm-textarea--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
-            [attr.placeholder]="schema.title || label"
+            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+            [attr.aria-describedby]="describedBy"
             [formControl]="controlAsFormControl"
             (blur)="onBlur()"></textarea>
 
           <div *ngIf="inputKind === 'select'" class="jsm-select-wrap">
-            <select class="jsm-select"
+            <select class="jsm-select" [id]="nodeId"
               [class.jsm-select--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+              [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+              [attr.aria-describedby]="describedBy"
               [formControl]="controlAsFormControl"
               (blur)="onBlur()">
               <option *ngFor="let option of effectiveSchema.enum" [ngValue]="option">{{ option }}</option>
             </select>
-            <svg class="jsm-select-chevron" viewBox="0 0 16 16" fill="none">
+            <svg class="jsm-select-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
 
           <label *ngIf="inputKind === 'checkbox'" class="jsm-toggle-label">
             <span class="jsm-toggle-track" [class.jsm-on]="controlAsFormControl.value">
-              <input type="checkbox" class="sr-only" [formControl]="controlAsFormControl" />
+              <input type="checkbox" class="sr-only" [id]="nodeId" [formControl]="controlAsFormControl"
+                [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+                [attr.aria-describedby]="describedBy" (blur)="onBlur()" />
               <span class="jsm-toggle-thumb"></span>
             </span>
             <span class="jsm-toggle-text">
-              {{ schema.title || label }}<span *ngIf="required" class="jsm-required">*</span>
+              {{ schema.title || label }}<span *ngIf="required" class="jsm-required" aria-hidden="true">*</span>
             </span>
           </label>
         </ng-container>
 
-        <p *ngIf="inputKind === 'checkbox' && schema.description" class="jsm-field-hint">{{ schema.description }}</p>
-        <p *ngIf="effectiveSchema.examples?.length" class="jsm-example">e.g. {{ effectiveSchema.examples?.[0] }}</p>
-        <p *ngIf="effectiveSchema.contentMediaType" class="jsm-example">
+        <p *ngIf="inputKind === 'checkbox' && schema.description" class="jsm-field-hint" [id]="nodeId + '-hint'">{{ schema.description }}</p>
+        <p *ngIf="effectiveSchema.examples?.length" class="jsm-example" [id]="nodeId + '-example'">{{ l.example }} {{ effectiveSchema.examples?.[0] }}</p>
+        <p *ngIf="effectiveSchema.contentMediaType" class="jsm-example" [id]="nodeId + '-media'">
           {{ effectiveSchema.contentMediaType }}<span *ngIf="effectiveSchema.contentEncoding"> ({{ effectiveSchema.contentEncoding }})</span>
         </p>
 
-        <div *ngIf="allErrors.length && (controlAsFormControl.dirty || isTouched || showErrors)" class="jsm-error-list">
+        <div *ngIf="visibleError" class="jsm-error-list" role="alert" [id]="nodeId + '-error'">
           <p *ngFor="let error of allErrors" class="jsm-error-msg">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none">
+            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
               <path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
@@ -499,7 +538,7 @@ import { DecimalSeparator, JsonSchemaFormOptions, localizeNumbers, NumericInputD
       </div>
 
     </ng-container>
-  `,
+`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
@@ -523,6 +562,9 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
   propertyError = '';
   /** Tracks whether this primitive control has been touched (for OnPush CD). */
   isTouched = false;
+
+  /** Unique DOM id base of this node: links labels, hints and errors to the control (WCAG 1.3.1, 4.1.2). */
+  readonly nodeId = `jsm-n${++nextNodeId}`;
 
   private valueSub?: Subscription;
 
@@ -583,6 +625,71 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     return this.options?.decimalSeparator ?? '.';
   }
 
+  /** Texts shown by the form (see `labels` of `jsm-json-schema-form`). */
+  get l(): JsonSchemaFormLabels {
+    return this.options?.labels ?? DEFAULT_LABELS;
+  }
+
+  fmt(template: string, values: Record<string, string | number> = {}): string {
+    return formatLabel(template, values);
+  }
+
+  localize(message: string): string {
+    return localizeNumbers(message, this.decimalSeparator);
+  }
+
+  optionLabel(index: number): string {
+    return this.fmt(this.l.option, { n: index + 1 });
+  }
+
+  sectionLabel(index: number): string {
+    return this.fmt(this.l.section, { n: index + 1 });
+  }
+
+  /** DOM id of a dynamic key label (keys may contain characters that are not valid in ids). */
+  keyId(key: string): string {
+    return `${this.nodeId}-key-${key.replace(/[^A-Za-z0-9_-]/g, (c) => `_${c.charCodeAt(0).toString(16)}`)}`;
+  }
+
+  /** True when the error list of this primitive is shown (same gate as the error styling). */
+  get visibleError(): boolean {
+    return this.allErrors.length > 0 && (this.control.dirty || this.isTouched || this.showErrors);
+  }
+
+  /** Ids of the hint, example, media type and error texts that describe this control. */
+  get describedBy(): string | null {
+    const ids: string[] = [];
+    if (this.schema.description) ids.push(`${this.nodeId}-hint`);
+    if (this.effectiveSchema.examples?.length) ids.push(`${this.nodeId}-example`);
+    if (this.effectiveSchema.contentMediaType) ids.push(`${this.nodeId}-media`);
+    if (this.visibleError) ids.push(`${this.nodeId}-error`);
+    return ids.length ? ids.join(' ') : null;
+  }
+
+  selectOneOf(index: number): void {
+    this.selectedOneOf = index;
+    this.onOneOfChange();
+  }
+
+  /** WAI-ARIA tabs keyboard support: arrows, Home and End move between the oneOf options. */
+  onOneOfKeydown(event: KeyboardEvent): void {
+    const count = this.schema.oneOf?.length ?? 0;
+    if (!count) return;
+    let next = this.selectedOneOf;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown': next = (next + 1) % count; break;
+      case 'ArrowLeft':
+      case 'ArrowUp': next = (next - 1 + count) % count; break;
+      case 'Home': next = 0; break;
+      case 'End': next = count - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    this.selectOneOf(next);
+    setTimeout(() => document.getElementById(`${this.nodeId}-tab-${next}`)?.focus());
+  }
+
   /** `multipleOf` of this node's own schema, exposed as step metadata. */
   get numericStep(): string {
     return this.effectiveSchema.multipleOf ? String(this.effectiveSchema.multipleOf) : 'any';
@@ -626,20 +733,21 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     if (!ctrl.errors) return ajvErrors;
     const angularErrors: string[] = [];
     const errs = ctrl.errors;
-    if (errs['required']) angularErrors.push('This field is required');
-    if (errs['minlength']) angularErrors.push(`Minimum length is ${errs['minlength'].requiredLength}`);
-    if (errs['maxlength']) angularErrors.push(`Maximum length is ${errs['maxlength'].requiredLength}`);
-    if (errs['min']) angularErrors.push(`Minimum value is ${errs['min'].min}`);
-    if (errs['max']) angularErrors.push(`Maximum value is ${errs['max'].max}`);
-    if (errs['email']) angularErrors.push('Invalid email address');
-    if (errs['pattern']) angularErrors.push('Value does not match the required pattern');
-    if (errs['integer']) angularErrors.push('Value must be an integer');
-    if (errs['exclusiveMinimum']) angularErrors.push('Value must be greater than the minimum');
-    if (errs['exclusiveMaximum']) angularErrors.push('Value must be less than the maximum');
-    if (errs['multipleOf']) angularErrors.push('Value must be a multiple of the required number');
-    if (errs['minItems']) angularErrors.push(`Minimum ${errs['minItems'].requiredLength ?? ''} items required`);
-    if (errs['maxItems']) angularErrors.push(`Maximum ${errs['maxItems'].requiredLength ?? ''} items allowed`);
-    if (errs['uniqueItems']) angularErrors.push('Items must be unique');
+    const l = this.l;
+    if (errs['required']) angularErrors.push(l.errorRequired);
+    if (errs['minlength']) angularErrors.push(this.fmt(l.errorMinLength, { n: errs['minlength'].requiredLength }));
+    if (errs['maxlength']) angularErrors.push(this.fmt(l.errorMaxLength, { n: errs['maxlength'].requiredLength }));
+    if (errs['min']) angularErrors.push(this.fmt(l.errorMin, { n: errs['min'].min }));
+    if (errs['max']) angularErrors.push(this.fmt(l.errorMax, { n: errs['max'].max }));
+    if (errs['email']) angularErrors.push(l.errorEmail);
+    if (errs['pattern']) angularErrors.push(l.errorPattern);
+    if (errs['integer']) angularErrors.push(l.errorInteger);
+    if (errs['exclusiveMinimum']) angularErrors.push(l.errorExclusiveMin);
+    if (errs['exclusiveMaximum']) angularErrors.push(l.errorExclusiveMax);
+    if (errs['multipleOf']) angularErrors.push(l.errorMultipleOf);
+    if (errs['minItems']) angularErrors.push(this.fmt(l.errorMinItems, { n: errs['minItems'].requiredLength ?? '' }));
+    if (errs['maxItems']) angularErrors.push(this.fmt(l.errorMaxItems, { n: errs['maxItems'].requiredLength ?? '' }));
+    if (errs['uniqueItems']) angularErrors.push(l.errorUniqueItems);
     // Merge: prefer Ajv messages, fall back to Angular messages for errors not covered by Ajv
     const messages = ajvErrors.length > 0 ? ajvErrors : angularErrors;
     return messages.map((message) => localizeNumbers(message, this.decimalSeparator));
@@ -664,8 +772,15 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
     return this.effectiveSchema;
   }
 
+  /**
+   * Sections rendered for an allOf: the schema's own keywords (without the allOf itself, which would render
+   * this node again forever) when it declares any, followed by every allOf entry.
+   */
   get mergedAllOf(): JsonSchema[] {
-    return this.schema.allOf?.length ? [this.schema, ...this.schema.allOf] : [this.schema];
+    const { allOf, ...own } = this.schema;
+    if (!allOf?.length) return [this.schema];
+    const declaresOwn = Object.keys(own).some((key) => !['title', 'description', '$id', '$schema', '$comment'].includes(key));
+    return declaresOwn ? [own, ...allOf] : [...allOf];
   }
 
   isRequired(key: string): boolean { return this.effectiveSchema.required?.includes(key) ?? false; }
@@ -683,15 +798,15 @@ export class JsonSchemaNodeComponent implements OnInit, OnDestroy {
   addDynamicProperty(): void {
     this.propertyError = '';
     const key = this.newPropertyKey.trim();
-    if (!key) { this.propertyError = 'Property name is required.'; return; }
+    if (!key) { this.propertyError = this.l.propertyNameRequired; return; }
     if (this.effectiveSchema.propertyNames) {
       if (this.validation.validate(this.effectiveSchema.propertyNames, key).length) {
-        this.propertyError = 'Property name does not match schema constraints.'; return;
+        this.propertyError = this.l.propertyNameInvalid; return;
       }
     }
-    if (this.controlAsGroup.contains(key)) { this.propertyError = 'Property already exists.'; return; }
+    if (this.controlAsGroup.contains(key)) { this.propertyError = this.l.propertyExists; return; }
     const s = this.schemaService.resolveDynamicSchema(this.effectiveSchema, key);
-    if (!s) { this.propertyError = 'This property is not allowed by the schema.'; return; }
+    if (!s) { this.propertyError = this.l.propertyNotAllowed; return; }
     this.controlAsGroup.addControl(key, this.schemaService.buildControl(s, undefined, false));
     this.newPropertyKey = '';
   }
