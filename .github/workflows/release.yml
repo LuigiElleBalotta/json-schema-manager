@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -20,7 +21,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
@@ -40,7 +41,5 @@ jobs:
           files: |
             release/ng-json-schema-form-${{ steps.tag.outputs.version }}.tgz
             release/demo-${{ steps.tag.outputs.version }}.tgz
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm (trusted publishing, no token)
         run: npm publish ./dist/ng-json-schema-form --access public
