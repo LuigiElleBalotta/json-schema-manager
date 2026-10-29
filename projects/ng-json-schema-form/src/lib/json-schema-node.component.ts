@@ -268,120 +268,148 @@ let nextNodeId = 0;
     .dark .jsm-select-chevron    { color:#94a3b8; }
   `],
   template: `
-    <ng-container [ngSwitch]="nodeKind">
-
-      <!-- ═══ oneOf ═══ -->
-      <div *ngSwitchCase="'oneOf'" class="jsm-combinator">
-        <div class="jsm-combinator-header">
-          <div>
-            <p class="jsm-combinator-title">{{ schema.title || label }}</p>
-            <p *ngIf="schema.description" class="jsm-combinator-hint">{{ schema.description }}</p>
-          </div>
-          <span class="jsm-combinator-badge jsm-badge--oneof">oneOf</span>
+@switch (nodeKind) {
+  <!-- ═══ oneOf ═══ -->
+  @case ('oneOf') {
+    <div class="jsm-combinator">
+      <div class="jsm-combinator-header">
+        <div>
+          <p class="jsm-combinator-title">{{ schema.title || label }}</p>
+          @if (schema.description) {
+            <p class="jsm-combinator-hint">{{ schema.description }}</p>
+          }
         </div>
-        <div class="jsm-oneof-tabs" role="tablist" [attr.aria-label]="schema.title || label || null" (keydown)="onOneOfKeydown($event)">
-          <button *ngFor="let option of schema.oneOf; let i = index" type="button" role="tab"
+        <span class="jsm-combinator-badge jsm-badge--oneof">oneOf</span>
+      </div>
+      <div class="jsm-oneof-tabs" role="tablist" [attr.aria-label]="schema.title || label || null" (keydown)="onOneOfKeydown($event)">
+        @for (option of schema.oneOf; track option; let i = $index) {
+          <button type="button" role="tab"
             class="jsm-tab" [class.jsm-tab--active]="selectedOneOf === i"
             [id]="nodeId + '-tab-' + i" [attr.aria-selected]="selectedOneOf === i"
             [attr.aria-controls]="nodeId + '-panel'" [attr.tabindex]="selectedOneOf === i ? 0 : -1"
             (click)="selectOneOf(i)">
             {{ option.title || optionLabel(i) }}
           </button>
-        </div>
-        <div class="jsm-combinator-body" *ngIf="activeVariant" role="tabpanel" [id]="nodeId + '-panel'"
+        }
+      </div>
+      @if (activeVariant) {
+        <div class="jsm-combinator-body" role="tabpanel" [id]="nodeId + '-panel'"
           [attr.aria-labelledby]="nodeId + '-tab-' + selectedOneOf">
           <jsm-schema-node [schema]="activeVariant" [control]="control" [parent]="parent" [controlKey]="controlKey"
             [path]="path" [errorsMap]="errorsMap" [label]="label" [required]="required"
             [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
-            (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
+          (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
         </div>
+      }
+    </div>
+  }
+  <!-- ═══ anyOf ═══ -->
+  @case ('anyOf') {
+    <div class="jsm-combinator">
+      <div class="jsm-combinator-header">
+        <div>
+          <p class="jsm-combinator-title">{{ schema.title || label }}</p>
+          @if (schema.description) {
+            <p class="jsm-combinator-hint">{{ schema.description }}</p>
+          }
+        </div>
+        <span class="jsm-combinator-badge jsm-badge--anyof">anyOf</span>
       </div>
-
-      <!-- ═══ anyOf ═══ -->
-      <div *ngSwitchCase="'anyOf'" class="jsm-combinator">
-        <div class="jsm-combinator-header">
-          <div>
-            <p class="jsm-combinator-title">{{ schema.title || label }}</p>
-            <p *ngIf="schema.description" class="jsm-combinator-hint">{{ schema.description }}</p>
-          </div>
-          <span class="jsm-combinator-badge jsm-badge--anyof">anyOf</span>
-        </div>
-        <div class="jsm-anyof-options" role="group" [attr.aria-label]="schema.title || label || null">
-          <label *ngFor="let option of schema.anyOf; let i = index"
+      <div class="jsm-anyof-options" role="group" [attr.aria-label]="schema.title || label || null">
+        @for (option of schema.anyOf; track option; let i = $index) {
+          <label
             class="jsm-anyof-option" [class.jsm-anyof-option--active]="selectedAnyOf.has(i)">
             <input type="checkbox" class="sr-only" [checked]="selectedAnyOf.has(i)" (change)="toggleAnyOf(i)" />
             {{ option.title || optionLabel(i) }}
           </label>
-        </div>
-        <div class="jsm-combinator-body" *ngIf="activeVariant">
+        }
+      </div>
+      @if (activeVariant) {
+        <div class="jsm-combinator-body">
           <jsm-schema-node [schema]="activeVariant" [control]="control" [parent]="parent" [controlKey]="controlKey"
             [path]="path" [errorsMap]="errorsMap" [label]="label" [required]="required"
             [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
-            (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
+          (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
         </div>
+      }
+    </div>
+  }
+  <!-- ═══ allOf ═══ -->
+  @case ('allOf') {
+    <div class="jsm-combinator">
+      <div class="jsm-combinator-header">
+        <div>
+          <p class="jsm-combinator-title">{{ schema.title || label }}</p>
+          @if (schema.description) {
+            <p class="jsm-combinator-hint">{{ schema.description }}</p>
+          }
+        </div>
+        <span class="jsm-combinator-badge jsm-badge--allof">allOf</span>
       </div>
-
-      <!-- ═══ allOf ═══ -->
-      <div *ngSwitchCase="'allOf'" class="jsm-combinator">
-        <div class="jsm-combinator-header">
-          <div>
-            <p class="jsm-combinator-title">{{ schema.title || label }}</p>
-            <p *ngIf="schema.description" class="jsm-combinator-hint">{{ schema.description }}</p>
-          </div>
-          <span class="jsm-combinator-badge jsm-badge--allof">allOf</span>
-        </div>
-        <div class="jsm-combinator-body">
-          <div *ngFor="let subSchema of mergedAllOf; let i = index" class="jsm-allof-section">
+      <div class="jsm-combinator-body">
+        @for (subSchema of mergedAllOf; track subSchema; let i = $index) {
+          <div class="jsm-allof-section">
             <jsm-schema-node [schema]="subSchema" [control]="control" [parent]="parent" [controlKey]="controlKey"
               [path]="path" [errorsMap]="errorsMap" [label]="subSchema.title || sectionLabel(i)" [required]="required"
               [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
-              (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
+            (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
           </div>
-        </div>
+        }
       </div>
-
-      <!-- ═══ object ═══ -->
-      <fieldset *ngSwitchCase="'object'" class="jsm-fieldset">
-        <legend class="jsm-legend">{{ schema.title || label }}</legend>
-        <p *ngIf="schema.description" class="jsm-field-hint" style="margin-bottom:.75rem;margin-top:.25rem;">{{ schema.description }}</p>
-
-        <div *ngIf="metaBadges.length" class="jsm-badge-row" style="margin-bottom:.75rem;">
-          <span *ngFor="let badge of metaBadges" class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
+    </div>
+  }
+  <!-- ═══ object ═══ -->
+  @case ('object') {
+    <fieldset class="jsm-fieldset">
+      <legend class="jsm-legend">{{ schema.title || label }}</legend>
+      @if (schema.description) {
+        <p class="jsm-field-hint" style="margin-bottom:.75rem;margin-top:.25rem;">{{ schema.description }}</p>
+      }
+      @if (metaBadges.length) {
+        <div class="jsm-badge-row" style="margin-bottom:.75rem;">
+          @for (badge of metaBadges; track badge) {
+            <span class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
+          }
         </div>
-
-        <div class="jsm-obj-grid" [formGroup]="controlAsGroup">
-          <ng-container *ngFor="let key of simpleKeys">
-            <div style="display:flex;flex-direction:column;gap:.25rem;">
-              <div *ngIf="isDynamicKey(key)" class="jsm-dynamic-key-header">
+      }
+      <div class="jsm-obj-grid" [formGroup]="controlAsGroup">
+        @for (key of simpleKeys; track key) {
+          <div style="display:flex;flex-direction:column;gap:.25rem;">
+            @if (isDynamicKey(key)) {
+              <div class="jsm-dynamic-key-header">
                 <span class="jsm-dynamic-key-label" [id]="keyId(key)">{{ key }}</span>
                 <button type="button" class="jsm-btn-danger" [id]="keyId(key) + '-remove'"
-                  [attr.aria-labelledby]="keyId(key) + '-remove ' + keyId(key)" (click)="removeDynamicKey(key)">{{ l.remove }}</button>
+                [attr.aria-labelledby]="keyId(key) + '-remove ' + keyId(key)" (click)="removeDynamicKey(key)">{{ l.remove }}</button>
               </div>
+            }
+            <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
+              [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
+              [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
+            (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
+          </div>
+        }
+      </div>
+      @if (complexKeys.length > 0) {
+        <div class="jsm-obj-complex" [formGroup]="controlAsGroup">
+          @for (key of complexKeys; track key) {
+            <div style="display:flex;flex-direction:column;gap:.25rem;">
+              @if (isDynamicKey(key)) {
+                <div class="jsm-dynamic-key-header">
+                  <span class="jsm-dynamic-key-label" [id]="keyId(key)">{{ key }}</span>
+                  <button type="button" class="jsm-btn-danger" [id]="keyId(key) + '-remove'"
+                  [attr.aria-labelledby]="keyId(key) + '-remove ' + keyId(key)" (click)="removeDynamicKey(key)">{{ l.remove }}</button>
+                </div>
+              }
               <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
                 [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
                 [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
-                (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
+              (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
             </div>
-          </ng-container>
+          }
         </div>
-
-        <div class="jsm-obj-complex" *ngIf="complexKeys.length > 0" [formGroup]="controlAsGroup">
-          <ng-container *ngFor="let key of complexKeys">
-            <div style="display:flex;flex-direction:column;gap:.25rem;">
-              <div *ngIf="isDynamicKey(key)" class="jsm-dynamic-key-header">
-                <span class="jsm-dynamic-key-label" [id]="keyId(key)">{{ key }}</span>
-                <button type="button" class="jsm-btn-danger" [id]="keyId(key) + '-remove'"
-                  [attr.aria-labelledby]="keyId(key) + '-remove ' + keyId(key)" (click)="removeDynamicKey(key)">{{ l.remove }}</button>
-              </div>
-              <jsm-schema-node [schema]="schemaForKey(key)" [control]="childControl(key)" [parent]="controlAsGroup"
-                [controlKey]="key" [path]="pathForChild(key)" [errorsMap]="errorsMap" [label]="key"
-                [required]="isRequired(key)" [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
-                (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
-            </div>
-          </ng-container>
-        </div>
-
-        <div *ngIf="canAddProperty" class="jsm-add-prop" role="group" [attr.aria-labelledby]="nodeId + '-addprop'">
+      }
+      @if (canAddProperty) {
+        <div class="jsm-add-prop" role="group" [attr.aria-labelledby]="nodeId + '-addprop'">
           <p class="jsm-add-prop-label" [id]="nodeId + '-addprop'">{{ l.addProperty }}</p>
           <div class="jsm-add-prop-row">
             <input class="jsm-input jsm-input--sm" style="flex:1;" [(ngModel)]="newPropertyKey" [ngModelOptions]="{standalone: true}"
@@ -389,155 +417,205 @@ let nextNodeId = 0;
               [attr.aria-invalid]="propertyError ? 'true' : null" [attr.aria-describedby]="propertyError ? nodeId + '-prop-error' : null" />
             <button type="button" class="jsm-btn-primary" (click)="addDynamicProperty()">{{ l.add }}</button>
           </div>
-          <p *ngIf="propertyError" class="jsm-error-msg" role="alert" [id]="nodeId + '-prop-error'">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            {{ propertyError }}
-          </p>
-        </div>
-
-        <div *ngIf="errorsForPath.length" class="jsm-error-list" role="alert" style="margin-top:.75rem;">
-          <p *ngFor="let error of errorsForPath" class="jsm-error-msg">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            {{ localize(error) }}
-          </p>
-        </div>
-      </fieldset>
-
-      <!-- ═══ array ═══ -->
-      <div *ngSwitchCase="'array'" class="jsm-array-block" role="group" [attr.aria-labelledby]="nodeId + '-title'">
-        <div class="jsm-array-header">
-          <div>
-            <p class="jsm-array-title" [id]="nodeId + '-title'">
-              {{ schema.title || label }}<span *ngIf="required" class="jsm-required" aria-hidden="true">*</span>
+          @if (propertyError) {
+            <p class="jsm-error-msg" role="alert" [id]="nodeId + '-prop-error'">
+              <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              {{ propertyError }}
             </p>
-            <p *ngIf="schema.description" class="jsm-field-hint">{{ schema.description }}</p>
-          </div>
-          <button type="button" class="jsm-btn-primary" [id]="nodeId + '-add'"
-            [attr.aria-labelledby]="nodeId + '-add ' + nodeId + '-title'" (click)="addArrayItem()" [disabled]="!canAddArrayItem">
-            <svg style="width:.875rem;height:.875rem;flex-shrink:0;" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            {{ l.addItem }}
-          </button>
+          }
         </div>
-
-        <div *ngIf="effectiveSchema.contains" class="jsm-contains-hint">
-          {{ l.mustContain }}
-          <span *ngIf="effectiveSchema.minContains"> · {{ fmt(l.min, { n: effectiveSchema.minContains }) }}</span>
-          <span *ngIf="effectiveSchema.maxContains"> · {{ fmt(l.max, { n: effectiveSchema.maxContains }) }}</span>
+      }
+      @if (errorsForPath.length) {
+        <div class="jsm-error-list" role="alert" style="margin-top:.75rem;">
+          @for (error of errorsForPath; track error) {
+            <p class="jsm-error-msg">
+              <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              {{ localize(error) }}
+            </p>
+          }
         </div>
-
-        <div *ngIf="metaBadges.length" class="jsm-badge-row">
-          <span *ngFor="let badge of metaBadges" class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
-        </div>
-
-        <div class="jsm-array-items" *ngIf="arrayControls.length > 0; else emptyArray">
-          <div *ngFor="let item of arrayControls; let i = index" class="jsm-array-item" role="group" [attr.aria-labelledby]="nodeId + '-item-' + i">
+      }
+    </fieldset>
+  }
+  <!-- ═══ array ═══ -->
+  @case ('array') {
+    <div class="jsm-array-block" role="group" [attr.aria-labelledby]="nodeId + '-title'">
+      <div class="jsm-array-header">
+        <div>
+          <p class="jsm-array-title" [id]="nodeId + '-title'">
+            {{ schema.title || label }}@if (required) {
+            <span class="jsm-required" aria-hidden="true">*</span>
+          }
+        </p>
+        @if (schema.description) {
+          <p class="jsm-field-hint">{{ schema.description }}</p>
+        }
+      </div>
+      <button type="button" class="jsm-btn-primary" [id]="nodeId + '-add'"
+        [attr.aria-labelledby]="nodeId + '-add ' + nodeId + '-title'" (click)="addArrayItem()" [disabled]="!canAddArrayItem">
+        <svg style="width:.875rem;height:.875rem;flex-shrink:0;" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        {{ l.addItem }}
+      </button>
+    </div>
+    @if (effectiveSchema.contains) {
+      <div class="jsm-contains-hint">
+        {{ l.mustContain }}
+        @if (effectiveSchema.minContains) {
+          <span> · {{ fmt(l.min, { n: effectiveSchema.minContains }) }}</span>
+        }
+        @if (effectiveSchema.maxContains) {
+          <span> · {{ fmt(l.max, { n: effectiveSchema.maxContains }) }}</span>
+        }
+      </div>
+    }
+    @if (metaBadges.length) {
+      <div class="jsm-badge-row">
+        @for (badge of metaBadges; track badge) {
+          <span class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
+        }
+      </div>
+    }
+    @if (arrayControls.length > 0) {
+      <div class="jsm-array-items">
+        @for (item of arrayControls; track item; let i = $index) {
+          <div class="jsm-array-item" role="group" [attr.aria-labelledby]="nodeId + '-item-' + i">
             <div class="jsm-array-item-header">
               <span class="jsm-array-index" aria-hidden="true">{{ i + 1 }}</span>
               <span class="sr-only" [id]="nodeId + '-item-' + i">{{ fmt(l.arrayItem, { n: i + 1 }) }}</span>
               <button type="button" class="jsm-btn-danger" [id]="nodeId + '-remove-' + i"
-                [attr.aria-labelledby]="nodeId + '-remove-' + i + ' ' + nodeId + '-item-' + i" (click)="removeArrayItem(i)">{{ l.remove }}</button>
+              [attr.aria-labelledby]="nodeId + '-remove-' + i + ' ' + nodeId + '-item-' + i" (click)="removeArrayItem(i)">{{ l.remove }}</button>
             </div>
             <jsm-schema-node [schema]="schemaForIndex(i)" [control]="item" [parent]="controlAsArray"
               [controlKey]="i" [path]="pathForChild(i)" [errorsMap]="errorsMap" [label]="label + ' item'"
               [allowAdditionalProperties]="allowAdditionalProperties" [showErrors]="showErrors"
-              (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
+            (controlReplaced)="controlReplaced.emit($event)"></jsm-schema-node>
           </div>
-        </div>
-
-        <ng-template #emptyArray>
-          <div class="jsm-empty-array">{{ l.noItems }}</div>
-        </ng-template>
-
-        <div *ngIf="errorsForPath.length" class="jsm-error-list" role="alert">
-          <p *ngFor="let error of errorsForPath" class="jsm-error-msg">
+        }
+      </div>
+    } @else {
+      <div class="jsm-empty-array">{{ l.noItems }}</div>
+    }
+    @if (errorsForPath.length) {
+      <div class="jsm-error-list" role="alert">
+        @for (error of errorsForPath; track error) {
+          <p class="jsm-error-msg">
             <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             {{ localize(error) }}
           </p>
-        </div>
+        }
       </div>
-
-      <!-- ═══ primitive ═══ -->
-      <div *ngSwitchDefault class="jsm-field">
-        <ng-container *ngIf="inputKind !== 'checkbox'">
-          <label class="jsm-field-label" [attr.for]="nodeId">
-            {{ schema.title || label }}<span *ngIf="required" class="jsm-required" aria-hidden="true">*</span>
-          </label>
-          <p *ngIf="schema.description" class="jsm-field-hint" [id]="nodeId + '-hint'">{{ schema.description }}</p>
-        </ng-container>
-
-        <div *ngIf="metaBadges.length" class="jsm-badge-row">
-          <span *ngFor="let badge of metaBadges" class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
-        </div>
-
-        <ng-container>
-          <input *ngIf="inputKind === 'number'" jsmNumeric type="text" inputmode="decimal" class="jsm-input" [id]="nodeId"
-            [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
-            [jsmDecimalSeparator]="decimalSeparator" [attr.data-step]="numericStep"
-            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
-            [attr.aria-describedby]="describedBy"
-            [formControl]="controlAsFormControl"
-            (blur)="onBlur()" />
-
-          <input *ngIf="inputKind === 'text'" class="jsm-input" [id]="nodeId"
-            [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
-            [attr.type]="inputType"
-            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
-            [attr.aria-describedby]="describedBy"
-            [formControl]="controlAsFormControl"
-            (blur)="onBlur()" />
-
-          <textarea *ngIf="inputKind === 'textarea'" rows="4" class="jsm-textarea" [id]="nodeId"
-            [class.jsm-textarea--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
-            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
-            [attr.aria-describedby]="describedBy"
-            [formControl]="controlAsFormControl"
-            (blur)="onBlur()"></textarea>
-
-          <div *ngIf="inputKind === 'select'" class="jsm-select-wrap">
-            <select class="jsm-select" [id]="nodeId"
-              [class.jsm-select--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
-              [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
-              [attr.aria-describedby]="describedBy"
-              [formControl]="controlAsFormControl"
-              (blur)="onBlur()">
-              <option *ngFor="let option of effectiveSchema.enum" [ngValue]="option">{{ option }}</option>
-            </select>
-            <svg class="jsm-select-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-
-          <label *ngIf="inputKind === 'checkbox'" class="jsm-toggle-label">
-            <span class="jsm-toggle-track" [class.jsm-on]="controlAsFormControl.value">
-              <input type="checkbox" class="sr-only" [id]="nodeId" [formControl]="controlAsFormControl"
-                [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
-                [attr.aria-describedby]="describedBy" (blur)="onBlur()" />
-              <span class="jsm-toggle-thumb"></span>
-            </span>
-            <span class="jsm-toggle-text">
-              {{ schema.title || label }}<span *ngIf="required" class="jsm-required" aria-hidden="true">*</span>
-            </span>
-          </label>
-        </ng-container>
-
-        <p *ngIf="inputKind === 'checkbox' && schema.description" class="jsm-field-hint" [id]="nodeId + '-hint'">{{ schema.description }}</p>
-        <p *ngIf="effectiveSchema.examples?.length" class="jsm-example" [id]="nodeId + '-example'">{{ l.example }} {{ effectiveSchema.examples?.[0] }}</p>
-        <p *ngIf="effectiveSchema.contentMediaType" class="jsm-example" [id]="nodeId + '-media'">
-          {{ effectiveSchema.contentMediaType }}<span *ngIf="effectiveSchema.contentEncoding"> ({{ effectiveSchema.contentEncoding }})</span>
-        </p>
-
-        <div *ngIf="visibleError" class="jsm-error-list" role="alert" [id]="nodeId + '-error'">
-          <p *ngFor="let error of allErrors" class="jsm-error-msg">
-            <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            {{ error }}
-          </p>
-        </div>
+    }
+  </div>
+}
+<!-- ═══ primitive ═══ -->
+@default {
+  <div class="jsm-field">
+    @if (inputKind !== 'checkbox') {
+      <label class="jsm-field-label" [attr.for]="nodeId">
+        {{ schema.title || label }}@if (required) {
+        <span class="jsm-required" aria-hidden="true">*</span>
+      }
+    </label>
+    @if (schema.description) {
+      <p class="jsm-field-hint" [id]="nodeId + '-hint'">{{ schema.description }}</p>
+    }
+  }
+  @if (metaBadges.length) {
+    <div class="jsm-badge-row">
+      @for (badge of metaBadges; track badge) {
+        <span class="jsm-badge" [ngClass]="badgeClass(badge)">{{ badge }}</span>
+      }
+    </div>
+  }
+  <ng-container>
+    @if (inputKind === 'number') {
+      <input jsmNumeric type="text" inputmode="decimal" class="jsm-input" [id]="nodeId"
+        [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+        [jsmDecimalSeparator]="decimalSeparator" [attr.data-step]="numericStep"
+        [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+        [attr.aria-describedby]="describedBy"
+        [formControl]="controlAsFormControl"
+        (blur)="onBlur()" />
+    }
+    @if (inputKind === 'text') {
+      <input class="jsm-input" [id]="nodeId"
+        [class.jsm-input--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+        [attr.type]="inputType"
+        [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+        [attr.aria-describedby]="describedBy"
+        [formControl]="controlAsFormControl"
+        (blur)="onBlur()" />
+    }
+    @if (inputKind === 'textarea') {
+      <textarea rows="4" class="jsm-textarea" [id]="nodeId"
+        [class.jsm-textarea--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+        [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+        [attr.aria-describedby]="describedBy"
+        [formControl]="controlAsFormControl"
+      (blur)="onBlur()"></textarea>
+    }
+    @if (inputKind === 'select') {
+      <div class="jsm-select-wrap">
+        <select class="jsm-select" [id]="nodeId"
+          [class.jsm-select--error]="controlAsFormControl.invalid && (controlAsFormControl.dirty || isTouched || showErrors)"
+          [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+          [attr.aria-describedby]="describedBy"
+          [formControl]="controlAsFormControl"
+          (blur)="onBlur()">
+          @for (option of effectiveSchema.enum; track option) {
+            <option [ngValue]="option">{{ option }}</option>
+          }
+        </select>
+        <svg class="jsm-select-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
-
-    </ng-container>
+    }
+    @if (inputKind === 'checkbox') {
+      <label class="jsm-toggle-label">
+        <span class="jsm-toggle-track" [class.jsm-on]="controlAsFormControl.value">
+          <input type="checkbox" class="sr-only" [id]="nodeId" [formControl]="controlAsFormControl"
+            [attr.aria-required]="required ? 'true' : null" [attr.aria-invalid]="visibleError ? 'true' : null"
+            [attr.aria-describedby]="describedBy" (blur)="onBlur()" />
+          <span class="jsm-toggle-thumb"></span>
+        </span>
+        <span class="jsm-toggle-text">
+          {{ schema.title || label }}@if (required) {
+          <span class="jsm-required" aria-hidden="true">*</span>
+        }
+      </span>
+    </label>
+  }
+</ng-container>
+@if (inputKind === 'checkbox' && schema.description) {
+  <p class="jsm-field-hint" [id]="nodeId + '-hint'">{{ schema.description }}</p>
+}
+@if (effectiveSchema.examples?.length) {
+  <p class="jsm-example" [id]="nodeId + '-example'">{{ l.example }} {{ effectiveSchema.examples?.[0] }}</p>
+}
+@if (effectiveSchema.contentMediaType) {
+  <p class="jsm-example" [id]="nodeId + '-media'">
+    {{ effectiveSchema.contentMediaType }}@if (effectiveSchema.contentEncoding) {
+    <span> ({{ effectiveSchema.contentEncoding }})</span>
+  }
+</p>
+}
+@if (visibleError) {
+  <div class="jsm-error-list" role="alert" [id]="nodeId + '-error'">
+    @for (error of allErrors; track error) {
+      <p class="jsm-error-msg">
+        <svg class="jsm-error-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 5v3.5M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        {{ error }}
+      </p>
+    }
+  </div>
+}
+</div>
+}
+}
 `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
