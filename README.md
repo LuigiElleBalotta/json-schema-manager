@@ -1,11 +1,11 @@
-﻿# JSON Schema Manager (Angular 20)
+﻿# JSON Schema Manager (Angular 22)
 
 ![CI](https://github.com/LuigiElleBalotta/json-schema-manager/actions/workflows/ci.yml/badge.svg)
 ![Deploy Demo](https://github.com/LuigiElleBalotta/json-schema-manager/actions/workflows/deploy-demo.yml/badge.svg)
 ![Release](https://github.com/LuigiElleBalotta/json-schema-manager/actions/workflows/release.yml/badge.svg)
 ![npm](https://img.shields.io/npm/v/@elle96/ng-json-schema-manager)
 
-An Angular 20 library that renders any JSON Schema into a fully reactive Angular form. Supports legacy drafts (draft‑04/06/07) and modern drafts (2019‑09/2020‑12). If `$schema` is absent the library infers a best‑effort draft. Styled exclusively with Tailwind utility classes (v3 and v4 compatible). Includes dark mode support.
+An Angular 22 library that renders any JSON Schema into a fully reactive Angular form. Supports legacy drafts (draft‑04/06/07) and modern drafts (2019‑09/2020‑12). If `$schema` is absent the library infers a best‑effort draft. Styled exclusively with Tailwind utility classes (v3 and v4 compatible). Includes dark mode support.
 
 ## Packages
 | Path | Purpose |
