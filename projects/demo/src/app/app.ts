@@ -1,5 +1,5 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormGroup, FormsModule } from '@angular/forms';
 import { JsonSchema, JsonSchemaFormComponent } from '@elle96/ng-json-schema-manager';
 import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
@@ -9,6 +9,7 @@ import { DEMO_SCHEMAS, DemoSchema } from './demo-schemas';
   standalone: true,
   imports: [CommonModule, FormsModule, JsonSchemaFormComponent],
   templateUrl: './app.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.css',
 })
 export class App {

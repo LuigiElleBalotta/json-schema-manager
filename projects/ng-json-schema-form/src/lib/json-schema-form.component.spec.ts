@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { JsonSchemaFormComponent } from './json-schema-form.component';
 import { DecimalSeparator } from './numeric-input';
@@ -7,6 +7,7 @@ import { JsonSchema } from './types';
 @Component({
   standalone: true,
   imports: [JsonSchemaFormComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<jsm-json-schema-form [schema]="schema" [data]="data" [decimalSeparator]="separator"
     (valueChange)="onChange($event)"></jsm-json-schema-form>`,
 })

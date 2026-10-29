@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -51,6 +51,7 @@ describe('numeric text helpers', () => {
 @Component({
   standalone: true,
   imports: [ReactiveFormsModule, NumericInputDirective],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<input jsmNumeric type="text" [jsmDecimalSeparator]="separator" [formControl]="control" />`,
 })
 class HostComponent {

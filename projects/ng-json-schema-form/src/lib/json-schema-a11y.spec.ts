@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import * as axe from 'axe-core';
 import { JsonSchemaFormComponent } from './json-schema-form.component';
@@ -8,6 +8,7 @@ import { JsonSchema } from './types';
 @Component({
   standalone: true,
   imports: [JsonSchemaFormComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<jsm-json-schema-form [schema]="schema" [data]="data" [labels]="labels" [allowAdditionalProperties]="true"></jsm-json-schema-form>`,
 })
 class HostComponent {

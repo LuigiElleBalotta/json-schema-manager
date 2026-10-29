@@ -10,7 +10,7 @@
   SimpleChanges,
   ViewEncapsulation,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { JsonSchemaFormService } from './json-schema-form.service';
@@ -26,7 +26,7 @@ import { DEFAULT_LABELS, JsonSchemaFormLabels } from './labels';
 @Component({
   selector: 'jsm-json-schema-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, JsonSchemaNodeComponent],
+  imports: [ReactiveFormsModule, JsonSchemaNodeComponent],
   providers: [JsonSchemaFormOptions],
   encapsulation: ViewEncapsulation.None,
   styles: [`
@@ -48,61 +48,73 @@ import { DEFAULT_LABELS, JsonSchemaFormLabels } from './labels';
   `],
   template: `
     <div class="jsm-root">
-    <form class="w-full space-y-5">
-      <div *ngIf="resolvedSchema?.title || resolvedSchema?.description" class="space-y-0.5">
-        <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{{ resolvedSchema?.title || options.labels.formTitle }}</h2>
-        <p *ngIf="resolvedSchema?.description" class="text-sm text-slate-500 dark:text-slate-400">{{ resolvedSchema?.description }}</p>
-      </div>
-
-      <div *ngIf="loading" class="flex items-center gap-2 py-6 text-sm text-slate-500 dark:text-slate-400" role="status">
-        <svg class="h-4 w-4 animate-spin text-indigo-500 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-        </svg>
-        {{ options.labels.resolving }}
-      </div>
-
-      <!-- schema structural errors panel -->
-      <div *ngIf="schemaErrorList.length > 0 && !loading"
-        class="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-3"
-        role="alert">
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <span class="text-sm font-semibold text-amber-800 dark:text-amber-300">
-            {{ options.labels.schemaErrorsTitle }} ({{ schemaErrorList.length }})
-          </span>
-        </div>
-        <p class="text-xs text-amber-700 dark:text-amber-400">
-          {{ options.labels.schemaErrorsHint }}
-        </p>
-        <div class="space-y-2">
-          <div *ngFor="let err of schemaErrorList"
-            class="rounded-lg border border-amber-200 dark:border-amber-800 bg-white dark:bg-slate-900 px-3 py-2 space-y-0.5">
-            <p class="font-mono text-[11px] font-semibold text-amber-700 dark:text-amber-400">{{ err.path }}</p>
-            <p class="text-xs text-slate-700 dark:text-slate-300">{{ err.message }}</p>
-            <p class="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">keyword: {{ err.keyword }}</p>
+      <form class="w-full space-y-5">
+        @if (resolvedSchema?.title || resolvedSchema?.description) {
+          <div class="space-y-0.5">
+            <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">{{ resolvedSchema?.title || options.labels.formTitle }}</h2>
+            @if (resolvedSchema?.description) {
+              <p class="text-sm text-slate-500 dark:text-slate-400">{{ resolvedSchema?.description }}</p>
+            }
           </div>
-        </div>
-      </div>
-
-      <div *ngIf="form && resolvedSchema && !loading" class="space-y-5" [formGroup]="form">
-        <jsm-schema-node
-          [schema]="resolvedSchema"
-          [control]="rootControl"
-          [path]="''"
-          [errorsMap]="errorsMap"
-          [allowAdditionalProperties]="allowAdditionalProperties"
-          [showErrors]="showErrors"
-          label="Root"
-          (controlReplaced)="onRootReplaced($event)"
-        ></jsm-schema-node>
-      </div>
-    </form>
+        }
+    
+        @if (loading) {
+          <div class="flex items-center gap-2 py-6 text-sm text-slate-500 dark:text-slate-400" role="status">
+            <svg class="h-4 w-4 animate-spin text-indigo-500 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+            </svg>
+            {{ options.labels.resolving }}
+          </div>
+        }
+    
+        <!-- schema structural errors panel -->
+        @if (schemaErrorList.length > 0 && !loading) {
+          <div
+            class="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-3"
+            role="alert">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span class="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                {{ options.labels.schemaErrorsTitle }} ({{ schemaErrorList.length }})
+              </span>
+            </div>
+            <p class="text-xs text-amber-700 dark:text-amber-400">
+              {{ options.labels.schemaErrorsHint }}
+            </p>
+            <div class="space-y-2">
+              @for (err of schemaErrorList; track err) {
+                <div
+                  class="rounded-lg border border-amber-200 dark:border-amber-800 bg-white dark:bg-slate-900 px-3 py-2 space-y-0.5">
+                  <p class="font-mono text-[11px] font-semibold text-amber-700 dark:text-amber-400">{{ err.path }}</p>
+                  <p class="text-xs text-slate-700 dark:text-slate-300">{{ err.message }}</p>
+                  <p class="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">keyword: {{ err.keyword }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+    
+        @if (form && resolvedSchema && !loading) {
+          <div class="space-y-5" [formGroup]="form">
+            <jsm-schema-node
+              [schema]="resolvedSchema"
+              [control]="rootControl"
+              [path]="''"
+              [errorsMap]="errorsMap"
+              [allowAdditionalProperties]="allowAdditionalProperties"
+              [showErrors]="showErrors"
+              label="Root"
+              (controlReplaced)="onRootReplaced($event)"
+            ></jsm-schema-node>
+          </div>
+        }
+      </form>
     </div>
-  `,
+    `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonSchemaFormComponent implements OnChanges, OnDestroy {
